@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.env
+.venv
+venv/
+ENV/
+.ipynb_checkpoints
+*.pth
+*.pt
+*.bin
+
+# Docker
+.docker/
+docker-compose.override.yml
+
+# Système d'exploitation
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Fichiers volumineux
+*.safetensors
+*.ckpt
+*.pth
+*.onnx
+*.weights
+*.tar
+*.tar.gz
+*.zip
+*.7z
+*.rar
+
+# Logs et databases
+*.log
+*.sqlite
+*.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Configurations personnelles
+credentials.json
+secrets.json
+auth.json
