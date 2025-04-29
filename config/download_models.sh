@@ -1,37 +1,78 @@
 #!/bin/bash
+set -e
 
+# Fonction pour télécharger un modèle s'il n'existe pas déjà
+download_if_not_exists() {
+    local url="$1"
+    local dest="$2"
+    local name="$3"
+    
+    # S'assurer que le répertoire parent existe
+    mkdir -p "$(dirname "$dest")"
+    
+    if [ -f "$dest" ]; then
+        # Vérifier que le fichier a une taille raisonnable (>1MB)
+        local size=$(stat -c%s "$dest" 2>/dev/null || stat -f%z "$dest")
+        if [ "$size" -gt 1048576 ]; then
+            echo "✓ Modèle $name déjà présent ($size octets)"
+            return 0
+        else
+            echo "⚠️ Modèle $name détecté mais taille invalide ($size octets)"
+            rm -f "$dest"
+        fi
+    fi
+    
+    echo "📥 Téléchargement de $name..."
+    if [ -n "$HF_TOKEN" ]; then
+        wget --quiet --show-progress --header="Authorization: Bearer $HF_TOKEN" -O "$dest" "$url"
+    else
+        wget --quiet --show-progress -O "$dest" "$url"
+    fi
+    
+    echo "✅ $name téléchargé avec succès!"
+}
+
+echo "==== Vérification des modèles dans le volume network ===="
+
+# Message d'authentification
 if [ -z "$HF_TOKEN" ]; then
-    echo "ATTENTION: Variable HF_TOKEN non définie. Téléchargement anonyme, risque d'échec."
-    AUTH_HEADER=""
+    echo "⚠️ Variable HF_TOKEN non définie. Téléchargement anonyme (limites de débit possibles)"
 else
-    echo "Téléchargement avec authentification HuggingFace"
-    AUTH_HEADER="--header=\"Authorization: Bearer $HF_TOKEN\""
+    echo "🔐 Authentification HuggingFace activée"
 fi
 
-# Création des répertoires nécessaires
-mkdir -p /workspace/ComfyUI/models/text_encoders
-mkdir -p /workspace/ComfyUI/models/vae
-mkdir -p /workspace/ComfyUI/models/diffusion_models
+# Téléchargement des modèles essentiels
+echo "🔍 Vérification des modèles de base..."
 
-# Téléchargement des fichiers avec authentification si token disponible
-echo "Téléchargement des encodeurs de texte..."
-cd /workspace/ComfyUI/models/text_encoders
-if [ ! -f t5xxl_fp16.safetensors ]; then
-    eval "wget $AUTH_HEADER -O t5xxl_fp16.safetensors \"https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors?download=true\"" || echo "Échec du téléchargement de t5xxl_fp16.safetensors"
-fi
-if [ ! -f clip_l.safetensors ]; then
-    eval "wget $AUTH_HEADER -O clip_l.safetensors \"https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors?download=true\"" || echo "Échec du téléchargement de clip_l.safetensors"
-fi
+# S'assurer que nous sommes dans le répertoire ComfyUI
+cd /workspace/ComfyUI
 
-echo "Téléchargement du VAE..."
-cd /workspace/ComfyUI/models/vae
-if [ ! -f ae.safetensors ]; then
-    eval "wget $AUTH_HEADER -O ae.safetensors \"https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors?download=true\"" || echo "Échec du téléchargement de ae.safetensors"
-fi
+# Encodeurs de texte
+download_if_not_exists \
+    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors?download=true" \
+    "/workspace/ComfyUI/models/text_encoders/t5xxl_fp16.safetensors" \
+    "Encodeur T5XXL"
 
-echo "Téléchargement du modèle de diffusion..."
-cd /workspace/ComfyUI/models/diffusion_models
-if [ ! -f flux1-dev.safetensors ]; then
-    eval "wget $AUTH_HEADER -O flux1-dev.safetensors \"https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors\"" || echo "Échec du téléchargement de flux1-dev.safetensors"
-fi
-echo "Téléchargements terminés."
+download_if_not_exists \
+    "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors?download=true" \
+    "/workspace/ComfyUI/models/text_encoders/clip_l.safetensors" \
+    "Encodeur CLIP-L"
+
+# VAE
+download_if_not_exists \
+    "https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors?download=true" \
+    "/workspace/ComfyUI/models/vae/ae.safetensors" \
+    "FLUX VAE"
+
+# Modèle de diffusion
+download_if_not_exists \
+    "https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors" \
+    "/workspace/ComfyUI/models/diffusion_models/flux1-dev.safetensors" \
+    "FLUX.1-dev Modèle"
+
+echo "==== Vérification des permissions des fichiers ===="
+# S'assurer que tous les fichiers téléchargés sont accessibles
+chmod -R 755 /workspace/ComfyUI/models/
+
+echo "==== Téléchargements terminés ===="
+echo "💾 Tous les modèles sont stockés dans le volume network à /workspace/ComfyUI/models/"
