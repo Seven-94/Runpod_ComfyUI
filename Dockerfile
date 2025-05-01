@@ -1,5 +1,5 @@
-# Image de base avec CUDA 12.8.1 pour RunPod
-FROM nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
+# Image de base NGC avec PyTorch et CUDA préinstallés pour GPU dernière génération
+FROM nvcr.io/nvidia/pytorch:25.02-py3
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -7,29 +7,26 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    TORCH_CUDA_ARCH_LIST="6.0;7.0;7.5;8.0;8.6;8.9;9.0" \
+    TORCH_CUDA_ARCH_LIST="8.6+PTX;9.0+PTX;12.0+PTX;12.6+PTX" \
     HF_HUB_ENABLE_HF_TRANSFER="1"
 
 # Installation des dépendances système
-RUN apt-get update && apt-get upgrade -y && \
+RUN apt-get update --fix-missing && \
     apt-get install -y --no-install-recommends \
-    git wget curl unzip zip python3.10 python3.10-dev python3-pip \
-    ffmpeg libsm6 libxext6 libgl1-mesa-glx libglib2.0-0 \
-    build-essential ninja-build gcc g++ make cmake \
+    ffmpeg libsm6 libxext6 libglib2.0-0 libgl1 \
     nginx openssh-server && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    ln -sf /usr/bin/python3.10 /usr/bin/python
+    rm -rf /var/lib/apt/lists/*
 
 # Configuration SSH pour RunPod
 RUN mkdir -p /var/run/sshd && \
     echo 'root:runpod' | chpasswd && \
     sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-# Mise à jour de pip et installation des packages Python
+# Installation des packages Python supplémentaires (xformers déjà inclus dans l'image NGC)
 RUN pip3 install --upgrade pip setuptools wheel && \
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 && \
-    pip3 install numpy einops safetensors triton jupyterlab ipywidgets
+    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 --force-reinstall && \
+    pip3 install einops safetensors jupyterlab ipywidgets
 
 # Création d'une copie de ComfyUI dans l'image Docker
 WORKDIR /opt

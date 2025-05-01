@@ -6,7 +6,7 @@ Je suis sur un mac m1 max avec 32go de ram.
 ## But
  Mon but est de **creer un conteneur docker Comfyui pour l'utiliser sur Runpod.io (linux) avec les contraintes suivantes** :
 
-- Une image de base nvidia/cuda:12.8.1-cudnn-devel-ubuntu22.04
+- Une image de base nvcr.io/nvidia/pytorch:25.02-py3
 - L'installation de pytorch 2.7.0 avec la commande suivante `pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128`
 - L'installation de ComfyUi et des modules ComfyUI supplementaires suivants
     1. https://github.com/ltdrdata/ComfyUI-Manager.git
