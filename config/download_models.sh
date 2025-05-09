@@ -70,6 +70,36 @@ download_if_not_exists \
     "/workspace/ComfyUI/models/diffusion_models/flux1-dev.safetensors" \
     "FLUX.1-dev Modèle"
 
+# Modèle Fill Flux.1-dev
+download_if_not_exists \
+    "https://huggingface.co/black-forest-labs/FLUX.1-Fill-dev/resolve/main/flux1-fill-dev.safetensors" \
+    "/workspace/ComfyUI/models/diffusion_models/flux1-fill-dev.safetensors" \
+    "FLUX.1-Fill-dev Modèle"
+
+# Modèle Depth Flux.1-dev
+download_if_not_exists \
+    "https://huggingface.co/black-forest-labs/FLUX.1-Depth-dev/resolve/main/flux1-depth-dev.safetensors" \
+    "/workspace/ComfyUI/models/diffusion_models/flux1-depth-dev.safetensors" \
+    "FLUX.1-Depth-dev Modèle"
+
+# Modèle Fill Flux.1-dev
+download_if_not_exists \
+    "https://huggingface.co/black-forest-labs/FLUX.1-Canny-dev/resolve/main/flux1-canny-dev.safetensors" \
+    "/workspace/ComfyUI/models/diffusion_models/flux1-canny-dev.safetensors" \
+    "FLUX.1-Canny-dev Modèle"
+
+# Modèle Redux Flux.1-dev
+download_if_not_exists \
+    "https://huggingface.co/black-forest-labs/FLUX.1-Redux-dev/resolve/main/flux1-redux-dev.safetensors" \
+    "/workspace/ComfyUI/models/style_models/flux1-redux-dev.safetensors" \
+    "FLUX.1-Redux-dev Modèle"
+
+# Sigclip Vision Comfyui
+download_if_not_exists \
+    "https://huggingface.co/Comfy-Org/sigclip_vision_384/resolve/main/sigclip_vision_patch14_384.safetensors" \
+    "/workspace/ComfyUI/models/clip_vision/sigclip_vision_patch14_384.safetensors" \
+    "Sigclip Vision Comfyui"
+
 echo "==== Vérification des permissions des fichiers ===="
 # S'assurer que tous les fichiers téléchargés sont accessibles
 chmod -R 755 /workspace/ComfyUI/models/
