@@ -1,4 +1,4 @@
-name: Daily Docker Build and Push
+name: Docker Build and Push
 
 on:
   schedule:

@@ -105,4 +105,4 @@ echo "==== Vérification des permissions des fichiers ===="
 chmod -R 755 /workspace/ComfyUI/models/
 
 echo "==== Téléchargements terminés ===="
-echo "💾 Tous les modèles sont stockés dans le volume network à /workspace/ComfyUI/models/"
+echo "💾 Tous les modèles sont stockés dans le Volume Network à /workspace/ComfyUI/models/"
