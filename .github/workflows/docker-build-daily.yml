@@ -3,7 +3,7 @@ name: Docker Build and Push
 on:
   schedule:
     # Exécute le workflow tous les jours à 08:00 UTC
-    - cron: '0 8 * * *'
+    - cron: "0 08 * * *"
   # Permet l'exécution manuelle depuis l'interface GitHub
   workflow_dispatch:
 
