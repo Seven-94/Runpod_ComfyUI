@@ -1,0 +1,92 @@
+# Multi-stage Dockerfile pour réduire la taille finale
+# Stage 1: Build stage
+FROM nvcr.io/nvidia/pytorch:25.02-py3 AS builder
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIP_NO_CACHE_DIR=1
+
+# Installation des outils de build uniquement
+RUN apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
+    git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Installation des packages Python dans un environnement virtuel
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
+RUN pip install --upgrade pip setuptools wheel && \
+    pip install einops safetensors jupyterlab ipywidgets
+
+# Clonage des repos
+WORKDIR /tmp
+RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /tmp/ComfyUI && \
+    cd /tmp/ComfyUI && \
+    pip install -r requirements.txt
+
+RUN mkdir -p /tmp/extensions && \
+    git clone --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git /tmp/extensions/ComfyUI-Manager && \
+    git clone --depth 1 https://github.com/twri/sdxl_prompt_styler /tmp/extensions/sdxl_prompt_styler && \
+    git clone --depth 1 https://github.com/comfyanonymous/ComfyUI_TensorRT /tmp/extensions/ComfyUI_TensorRT
+
+# Stage 2: Runtime stage
+FROM nvcr.io/nvidia/pytorch:25.02-py3
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Variables d'environnement
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    TORCH_CUDA_ARCH_LIST="8.6+PTX;9.0+PTX;12.0+PTX;12.6+PTX" \
+    HF_HUB_ENABLE_HF_TRANSFER="1" \
+    PATH="/opt/venv/bin:$PATH"
+
+# Installation des dépendances runtime uniquement
+RUN apt-get update --fix-missing && \
+    apt-get install -y --no-install-recommends \
+    ffmpeg libsm6 libxext6 libglib2.0-0 libgl1 \
+    nginx openssh-server && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Configuration SSH pour RunPod
+RUN mkdir -p /var/run/sshd && \
+    echo 'root:runpod' | chpasswd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# Copie de l'environnement virtuel du stage builder
+COPY --from=builder /opt/venv /opt/venv
+
+# Copie des applications du stage builder
+COPY --from=builder /tmp/ComfyUI /opt/ComfyUI
+COPY --from=builder /tmp/extensions /opt/comfyui_extensions
+
+# Création des répertoires de base
+RUN mkdir -p /opt/comfyui_templates /usr/share/nginx/html
+
+# Copie des fichiers de configuration
+COPY config/nginx.conf /opt/comfyui_templates/nginx.conf
+COPY config/readme.html /opt/comfyui_templates/readme.html
+COPY config/README.md /usr/share/nginx/html/README.md
+COPY config/extra_model_paths.yml /opt/comfyui_templates/extra_model_paths.yml
+COPY config/download_models.sh /opt/comfyui_templates/download_models.sh
+COPY config/start.sh /start.sh
+COPY config/pre_start.sh /pre_start.sh
+
+# Copie des scripts utilitaires
+COPY scripts/ /opt/scripts/
+
+# Permissions d'exécution
+RUN chmod +x /opt/comfyui_templates/download_models.sh /pre_start.sh /start.sh /opt/scripts/*.sh
+
+# Exposition des ports
+EXPOSE 3000 8188 8888 22
+
+# Définir le répertoire de travail par défaut vers le répertoire ComfyUI dans le volume
+WORKDIR /workspace/ComfyUI
+
+CMD ["/start.sh"]

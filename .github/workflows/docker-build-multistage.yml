@@ -1,4 +1,4 @@
-name: Docker Build and Push
+name: Docker Build and Push (Multi-stage)
 
 on:
   schedule:
@@ -14,12 +14,7 @@ jobs:
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
         with:
-          # This might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
           tool-cache: false
-          
-          # All of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
           android: true
           dotnet: true
           haskell: true
@@ -47,7 +42,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
+          file: ./Dockerfile.multistage
           push: true
           platforms: linux/amd64
           tags: |

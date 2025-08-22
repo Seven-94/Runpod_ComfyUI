@@ -16,35 +16,40 @@ RUN apt-get update --fix-missing && \
     ffmpeg libsm6 libxext6 libglib2.0-0 libgl1 \
     nginx openssh-server && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Configuration SSH pour RunPod
 RUN mkdir -p /var/run/sshd && \
     echo 'root:runpod' | chpasswd && \
     sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-# Installation des packages Python supplémentaires (xformers déjà inclus dans l'image NGC)
+# Installation des packages Python supplémentaires (réutilise PyTorch de l'image NGC)
 RUN pip3 install --upgrade pip setuptools wheel && \
-    pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 --force-reinstall && \
-    pip3 install einops safetensors jupyterlab ipywidgets
+    pip3 install einops safetensors jupyterlab ipywidgets && \
+    pip3 cache purge && \
+    rm -rf /root/.cache/pip
 
 # Création d'une copie de ComfyUI dans l'image Docker
 WORKDIR /opt
-RUN git clone https://github.com/comfyanonymous/ComfyUI.git /opt/ComfyUI && \
+RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /opt/ComfyUI && \
     cd /opt/ComfyUI && \
-    pip install -r requirements.txt
+    pip install -r requirements.txt && \
+    pip3 cache purge && \
+    rm -rf /root/.cache/pip
 
 # Préinstallation des extensions dans un répertoire séparé
 RUN mkdir -p /opt/comfyui_extensions && \
-    git clone https://github.com/ltdrdata/ComfyUI-Manager.git /opt/comfyui_extensions/ComfyUI-Manager && \
+    git clone --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git /opt/comfyui_extensions/ComfyUI-Manager && \
     cd /opt/comfyui_extensions/ComfyUI-Manager && \
     pip install -r requirements.txt || echo "Pas de requirements.txt pour ComfyUI-Manager" && \
-    git clone https://github.com/twri/sdxl_prompt_styler /opt/comfyui_extensions/sdxl_prompt_styler && \
+    git clone --depth 1 https://github.com/twri/sdxl_prompt_styler /opt/comfyui_extensions/sdxl_prompt_styler && \
     cd /opt/comfyui_extensions/sdxl_prompt_styler && \
     if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi && \
-    git clone https://github.com/comfyanonymous/ComfyUI_TensorRT /opt/comfyui_extensions/ComfyUI_TensorRT && \
+    git clone --depth 1 https://github.com/comfyanonymous/ComfyUI_TensorRT /opt/comfyui_extensions/ComfyUI_TensorRT && \
     cd /opt/comfyui_extensions/ComfyUI_TensorRT && \
-    if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi
+    if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi && \
+    pip3 cache purge && \
+    rm -rf /root/.cache/pip /tmp/* /var/tmp/*
 
 # Création des répertoires de base
 RUN mkdir -p /opt/comfyui_templates /usr/share/nginx/html
