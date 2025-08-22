@@ -1,7 +1,14 @@
-# Image de base NGC avec PyTorch et CUDA préinstallés pour GPU dernière génération
-FROM nvcr.io/nvidia/pytorch:25.02-py3
+# Image de base plus stable avec PyTorch et CUDA
+FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-devel
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+# Variables d'environnement
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    TORCH_CUDA_ARCH_LIST="8.6+PTX;9.0+PTX" \
+    HF_HUB_ENABLE_HF_TRANSFER="1"
 
 # Variables d'environnement
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -14,7 +21,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 RUN apt-get update --fix-missing && \
     apt-get install -y --no-install-recommends \
     ffmpeg libsm6 libxext6 libglib2.0-0 libgl1 \
-    nginx openssh-server && \
+    nginx openssh-server git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -26,7 +33,6 @@ RUN mkdir -p /var/run/sshd && \
 # Installation des packages Python supplémentaires (réutilise PyTorch de l'image NGC)
 RUN pip3 install --upgrade pip setuptools wheel && \
     pip3 install einops safetensors jupyterlab ipywidgets && \
-    pip3 cache purge && \
     rm -rf /root/.cache/pip
 
 # Création d'une copie de ComfyUI dans l'image Docker
@@ -34,7 +40,6 @@ WORKDIR /opt
 RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /opt/ComfyUI && \
     cd /opt/ComfyUI && \
     pip install -r requirements.txt && \
-    pip3 cache purge && \
     rm -rf /root/.cache/pip
 
 # Préinstallation des extensions dans un répertoire séparé
@@ -48,7 +53,6 @@ RUN mkdir -p /opt/comfyui_extensions && \
     git clone --depth 1 https://github.com/comfyanonymous/ComfyUI_TensorRT /opt/comfyui_extensions/ComfyUI_TensorRT && \
     cd /opt/comfyui_extensions/ComfyUI_TensorRT && \
     if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi && \
-    pip3 cache purge && \
     rm -rf /root/.cache/pip /tmp/* /var/tmp/*
 
 # Création des répertoires de base
