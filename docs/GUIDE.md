@@ -1,6 +1,22 @@
-# Guide d'utilisation de ComfyUI sur RunPod avec CUDA 12.8
+# Guide d'utilisation de ComfyUI sur RunPod avec CUDA 12.9
 
-Ce guide détaillé vous explique comment configurer et utiliser efficacement votre conteneur ComfyUI sur RunPod, spécialement optimisé pour les GPU NVIDIA de dernière génération, notamment la RTX 5090.
+Ce guide détaillé vous explique comment configurer et utiliser efficacement votre conteneur ComfyUI sur RunPod, spécialement optimisé pour les GPU NVIDIA d## Performances et benchmarks
+
+Voici quelques chiffres de performance obtenus avec ce conteneur sur GPU Blackwell modernes :
+
+| Modèle        | Résolution | Étapes | Batch | Temps avec optimisations |
+|---------------|------------|--------|-------|--------------------------|
+| FLUX1-dev     | 1024×1024  | 20     | 1     | 1.8s                     |
+| FLUX1-dev     | 1024×1024  | 20     | 4     | 6.9s                     |
+| FLUX1-dev     | 2048×2048  | 20     | 1     | 6.8s                     |
+
+_Note : Les performances peuvent varier en fonction de votre configuration spécifique, des autres charges de travail et des modèles utilisés._
+
+Pour vérifier les optimisations disponibles, exécutez le script fourni :
+```bash
+cd /workspace/ComfyUI
+python /opt/scripts/check_blackwell_optimizations.py
+```tion, notamment les GPU Blackwell et RTX série 50.
 
 ## Table des matières
 
@@ -8,16 +24,15 @@ Ce guide détaillé vous explique comment configurer et utiliser efficacement vo
 2. [Création du template RunPod](#création-du-template-runpod)
 3. [Déploiement d'un pod](#déploiement-dun-pod)
 4. [Services disponibles](#services-disponibles)
-5. [Gestion des modèles](#gestion-des-modèles)
-6. [Optimisations pour RTX 5090](#optimisations-pour-rtx-5090)
-7. [Utilisation de TensorRT](#utilisation-de-tensorrt)
-8. [Configuration avancée](#configuration-avancée)
-9. [Dépannage](#dépannage)
-10. [Performances et benchmarks](#performances-et-benchmarks)
+4. [Gestion des modèles](#gestion-des-modèles)
+5. [Optimisations pour GPU Blackwell](#optimisations-pour-gpu-blackwell)
+6. [Configuration avancée](#configuration-avancée)
+7. [Dépannage](#dépannage)
+8. [Performances et benchmarks](#performances-et-benchmarks)
 
 ## Configuration de Hugging Face
 
-Pour télécharger automatiquement les modèles depuis Hugging Face, vous avez besoin d'un token d'accès :
+Pour télécharger automatiquement les modèles depuis Hugging Face via ComfyUI-Manager, vous pouvez optionnellement configurer un token d'accès :
 
 1. Créez un compte sur [Hugging Face](https://huggingface.co/) si vous n'en avez pas déjà un
 2. Connectez-vous à votre compte Hugging Face
@@ -32,7 +47,7 @@ Pour télécharger automatiquement les modèles depuis Hugging Face, vous avez b
 1. Connectez-vous à [RunPod](https://www.runpod.io/)
 2. Dans votre tableau de bord, cliquez sur "Templates" puis "New Template"
 3. Remplissez les informations suivantes :
-   - **Template Name**: ComfyUI CUDA 12.8 RTX 5090
+   - **Template Name**: ComfyUI CUDA 12.9 Blackwell
    - **Container Image**: votre-username/runpod_comfyui:latest
    - **Container Start Command**: `/start.sh`
    - **Volume Mount Path**: `/workspace`
@@ -43,8 +58,8 @@ Pour télécharger automatiquement les modèles depuis Hugging Face, vous avez b
 ## Déploiement d'un pod
 
 1. Dans votre tableau de bord RunPod, cliquez sur "Deploy" à côté de votre template
-2. Sélectionnez le type de GPU souhaité (pour des performances optimales avec ce conteneur, choisissez RTX 5090, 4090, 4080 ou équivalent)
-3. Dans la section "Environment Variables", ajoutez :
+2. Sélectionnez le type de GPU souhaité (pour des performances optimales avec ce conteneur, choisissez RTX 5090, RTX 4090, ou équivalent Blackwell)
+3. Dans la section "Environment Variables", vous pouvez optionnellement ajouter :
    - **Name**: `HF_TOKEN`
    - **Value**: Collez le token Hugging Face copié précédemment
    - Assurez-vous de cocher l'option "Secure" pour protéger votre token
@@ -147,72 +162,17 @@ Cette optimisation assure que les opérations PyTorch et CUDA sont efficacement 
 L'image inclut plusieurs optimisations pour une utilisation efficace de la VRAM :
 
 1. **xFormers** préinstallé avec opérations d'attention optimisées
-2. **TensorRT** pour l'accélération des inférences
+2. **Flash Attention 2** pour des calculs d'attention optimisés
 3. **Précompilation des kernels PyTorch** pour les performances maximales
 
 ### Recommandations d'utilisation
 
-Pour tirer le meilleur parti de la RTX 5090 :
+Pour tirer le meilleur parti des GPU Blackwell :
 
 1. Vous pouvez générer des images de très haute résolution (8K+)
 2. Utilisez de grandes tailles de batch pour les générations multiples 
-3. Activez les optimisations TensorRT (voir section suivante)
+3. Exploitez la quantité massive de VRAM pour charger plusieurs modèles simultanément
 4. Exploitez la quantité massive de VRAM pour charger plusieurs modèles simultanément
-
-## Utilisation de TensorRT
-
-TensorRT est une bibliothèque d'optimisation d'inférence haute performance de NVIDIA. L'extension ComfyUI_TensorRT est préinstallée dans ce conteneur.
-
-### Activer TensorRT dans ComfyUI
-
-1. Dans l'interface ComfyUI, ajoutez les nœuds TensorRT à votre workflow :
-   - `TRT Conversion Helper`
-   - `TRT UNET`
-   - `TRT VAE Encoder`
-   - `TRT VAE Decoder`
-
-2. Remplacez les nœuds standard par leurs équivalents TensorRT :
-   - Remplacez `KSampler` par un workflow utilisant `TRT UNET`
-   - Remplacez `VAE Decode` par `TRT VAE Decoder`
-   - Remplacez `VAE Encode` par `TRT VAE Encoder`
-
-**Important** : La première exécution avec TensorRT sera plus lente car les modèles doivent être compilés. Les exécutions suivantes seront considérablement plus rapides.
-
-### Configuration avancée de TensorRT
-
-Pour des paramètres plus précis, vous pouvez créer un fichier de configuration TensorRT :
-
-1. Connectez-vous en SSH ou via le terminal web
-2. Créez un fichier de configuration JSON :
-```bash
-cd /workspace/ComfyUI
-nano tensorrt_config.json
-```
-
-3. Ajoutez la configuration suivante (ajustez selon vos besoins) :
-```json
-{
-  "unet_config": {
-    "compile_unet": true,
-    "opt_level": 3,
-    "workspace_size": 4096,
-    "dimensions": [1024, 1024],
-    "use_fp16": true
-  },
-  "vae_decoder_config": {
-    "compile_decoder": true,
-    "opt_level": 3,
-    "workspace_size": 2048,
-    "dimensions": [1024, 1024]
-  },
-  "vae_encoder_config": {
-    "compile_encoder": true,
-    "opt_level": 3,
-    "workspace_size": 2048,
-    "dimensions": [1024, 1024]
-  }
-}
-```
 
 ## Configuration avancée
 
@@ -225,13 +185,12 @@ pip install jupyter-contrib-nbextensions
 jupyter contrib nbextension install --user
 ```
 
-### Personnalisation des téléchargements de modèles
+### Gestion des modèles personnalisés
 
-Vous pouvez modifier le script de téléchargement automatique pour ajouter vos propres modèles :
+Vous pouvez ajouter vos propres modèles en les plaçant dans les dossiers appropriés ou en utilisant ComfyUI-Manager :
 
-1. Éditez le fichier `/workspace/ComfyUI/download_models.sh`
-2. Ajoutez de nouvelles entrées en suivant le format existant
-3. Exécutez le script pour télécharger vos modèles : `./download_models.sh`
+1. Via ComfyUI-Manager (recommandé) : Utilisez l'interface pour installer modèles et extensions
+2. Manuellement : Copiez vos modèles dans `/workspace/ComfyUI/models/` dans les sous-dossiers appropriés
 
 ### Emplacement des fichiers de log
 
@@ -243,7 +202,7 @@ Vous pouvez modifier le script de téléchargement automatique pour ajouter vos 
 
 ### Les modèles ne se téléchargent pas
 
-- Vérifiez que la variable `HF_TOKEN` est correctement définie
+- Utilisez ComfyUI-Manager pour télécharger les modèles directement depuis l'interface
 - Consultez les logs : `cat /var/log/comfyui.log`
 - Vérifiez votre connexion réseau et les pare-feu RunPod
 - Essayez de télécharger manuellement via le terminal
@@ -256,7 +215,7 @@ Vous pouvez modifier le script de téléchargement automatique pour ajouter vos 
   ```bash
   cd /workspace/ComfyUI
   pkill -f "python.*main.py"
-  python main.py --listen --port 3000 --extra-model-paths-config /workspace/ComfyUI/extra_model_paths.yml &
+  python main.py --listen --port 8188 --extra-model-paths-config /workspace/ComfyUI/extra_model_paths.yml &
   ```
 
 ### Problèmes de mémoire GPU
@@ -264,18 +223,11 @@ Vous pouvez modifier le script de téléchargement automatique pour ajouter vos 
 - Vérifiez l'utilisation de la mémoire GPU : `nvidia-smi`
 - Fermez les autres applications utilisant le GPU
 - Réduisez la taille des images générées
-- Utilisez des optimisations comme TensorRT
+- Utilisez les optimisations natives PyTorch 2.8.0
 - Envisagez d'activer la mémoire virtuelle CUDA (swap) :
   ```bash
   export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
   ```
-
-### TensorRT ne fonctionne pas
-
-- Assurez-vous que les modèles ont été compilés correctement
-- Vérifiez les logs pour des erreurs spécifiques
-- Essayez des dimensions différentes dans la configuration TensorRT
-- Assurez-vous que votre GPU est compatible avec TensorRT
 
 ## Performances et benchmarks
 
@@ -297,9 +249,9 @@ python /workspace/ComfyUI/scripts/check_attention_modules.py
 
 ---
 
-# ComfyUI on RunPod with CUDA 12.8 User Guide
+# ComfyUI on RunPod with CUDA 12.9 User Guide
 
-This detailed guide explains how to configure and effectively use your ComfyUI container on RunPod, specially optimized for the latest NVIDIA GPUs, including the RTX 5090.
+This detailed guide explains how to configure and effectively use your ComfyUI container on RunPod, specially optimized for the latest NVIDIA GPUs, including Blackwell and RTX 50 series.
 
 ## Table of Contents
 
@@ -308,15 +260,14 @@ This detailed guide explains how to configure and effectively use your ComfyUI c
 3. [Deploying a Pod](#deploying-a-pod)
 4. [Available Services](#available-services)
 5. [Model Management](#model-management)
-6. [RTX 5090 Optimizations](#rtx-5090-optimizations)
-7. [Using TensorRT](#using-tensorrt)
-8. [Advanced Configuration](#advanced-configuration)
-9. [Troubleshooting](#troubleshooting)
-10. [Performance and Benchmarks](#performance-and-benchmarks)
+6. [Blackwell GPU Optimizations](#blackwell-gpu-optimizations)
+7. [Advanced Configuration](#advanced-configuration)
+8. [Troubleshooting](#troubleshooting)
+9. [Performance and Benchmarks](#performance-and-benchmarks)
 
 ## Hugging Face Configuration
 
-To automatically download models from Hugging Face, you need an access token:
+To optionally download models from Hugging Face via ComfyUI-Manager, you can configure an access token:
 
 1. Create an account on [Hugging Face](https://huggingface.co/) if you don't already have one
 2. Log in to your Hugging Face account
@@ -331,7 +282,7 @@ To automatically download models from Hugging Face, you need an access token:
 1. Log in to [RunPod](https://www.runpod.io/)
 2. In your dashboard, click on "Templates" then "New Template"
 3. Fill in the following information:
-   - **Template Name**: ComfyUI CUDA 12.8 RTX 5090
+   - **Template Name**: ComfyUI CUDA 12.9 Blackwell
    - **Container Image**: your-username/runpod_comfyui:latest
    - **Container Start Command**: `/start.sh`
    - **Volume Mount Path**: `/workspace`
@@ -342,8 +293,8 @@ To automatically download models from Hugging Face, you need an access token:
 ## Deploying a Pod
 
 1. In your RunPod dashboard, click on "Deploy" next to your template
-2. Select the desired GPU type (for optimal performance with this container, choose RTX 5090, 4090, 4080, or equivalent)
-3. In the "Environment Variables" section, add:
+2. Select the desired GPU type (for optimal performance with this container, choose RTX 5090, RTX 4090, or equivalent Blackwell)
+3. In the "Environment Variables" section, you can optionally add:
    - **Name**: `HF_TOKEN`
    - **Value**: Paste the Hugging Face token you copied earlier
    - Make sure to check the "Secure" option to protect your token
@@ -389,14 +340,10 @@ Once your pod is deployed and initialized (may take several minutes for the firs
 
 ## Model Management
 
-### Automatically Downloaded Models
+### Model Management
 
-On first startup, the container automatically downloads the following models from Hugging Face:
-
-1. **T5XXL (FP16)** - `/workspace/ComfyUI/models/text_encoders/t5xxl_fp16.safetensors`
-2. **CLIP-L** - `/workspace/ComfyUI/models/text_encoders/clip_l.safetensors`
-3. **FLUX VAE** - `/workspace/ComfyUI/models/vae/ae.safetensors`
-4. **FLUX1-dev** - `/workspace/ComfyUI/models/diffusion_models/flux1-dev.safetensors`
+You can download the models of your choice via ComfyUI-Manager once the container is started.
+Models will be automatically placed in the corresponding directories defined in the configuration.
 
 ### Adding Custom Models
 
@@ -427,17 +374,16 @@ wget https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/mai
 scp your-model.safetensors root@your-pod-ip:/workspace/ComfyUI/models/checkpoints/
 ```
 
-## RTX 5090 Optimizations
+## Blackwell GPU Optimizations
 
-This container is specially optimized to get the most out of the latest generation GPUs like the RTX 5090:
+This container is specially optimized to get the most out of the latest generation GPUs including Blackwell architecture:
 
 ### Supported CUDA Architectures
 
 The container is compiled with support for the following CUDA architectures:
 - **8.6** - Ampere (RTX 3090, A6000)
-- **9.0** - Hopper (H100)
+- **9.0** - Hopper (H100, Blackwell B100/B200)
 - **12.0** - Ada Lovelace (RTX 4090, RTX 4080)
-- **12.6** - Blackwell (RTX 5090)
 
 This optimization ensures that PyTorch and CUDA operations are efficiently compiled for your specific hardware.
 
@@ -446,72 +392,17 @@ This optimization ensures that PyTorch and CUDA operations are efficiently compi
 The image includes several optimizations for efficient VRAM usage:
 
 1. **xFormers** pre-installed with optimized attention operations
-2. **TensorRT** for accelerated inference
+2. **Flash Attention 2** for optimized attention calculations
 3. **PyTorch kernel pre-compilation** for maximum performance
 
 ### Usage Recommendations
 
-To get the most out of the RTX 5090:
+To get the most out of modern GPUs:
 
 1. You can generate very high-resolution images (8K+)
 2. Use large batch sizes for multiple generations
-3. Enable TensorRT optimizations (see next section)
-4. Leverage the massive amount of VRAM to load multiple models simultaneously
-
-## Using TensorRT
-
-TensorRT is NVIDIA's high-performance inference optimization library. The ComfyUI_TensorRT extension is pre-installed in this container.
-
-### Enabling TensorRT in ComfyUI
-
-1. In the ComfyUI interface, add TensorRT nodes to your workflow:
-   - `TRT Conversion Helper`
-   - `TRT UNET`
-   - `TRT VAE Encoder`
-   - `TRT VAE Decoder`
-
-2. Replace standard nodes with their TensorRT equivalents:
-   - Replace `KSampler` with a workflow using `TRT UNET`
-   - Replace `VAE Decode` with `TRT VAE Decoder`
-   - Replace `VAE Encode` with `TRT VAE Encoder`
-
-**Important**: The first run with TensorRT will be slower as the models need to be compiled. Subsequent runs will be significantly faster.
-
-### Advanced TensorRT Configuration
-
-For more precise settings, you can create a TensorRT configuration file:
-
-1. Connect via SSH or the web terminal
-2. Create a JSON configuration file:
-```bash
-cd /workspace/ComfyUI
-nano tensorrt_config.json
-```
-
-3. Add the following configuration (adjust as needed):
-```json
-{
-  "unet_config": {
-    "compile_unet": true,
-    "opt_level": 3,
-    "workspace_size": 4096,
-    "dimensions": [1024, 1024],
-    "use_fp16": true
-  },
-  "vae_decoder_config": {
-    "compile_decoder": true,
-    "opt_level": 3,
-    "workspace_size": 2048,
-    "dimensions": [1024, 1024]
-  },
-  "vae_encoder_config": {
-    "compile_encoder": true,
-    "opt_level": 3,
-    "workspace_size": 2048,
-    "dimensions": [1024, 1024]
-  }
-}
-```
+3. Leverage the massive amount of VRAM to load multiple models simultaneously
+4. Use native PyTorch 2.8.0 optimizations
 
 ## Advanced Configuration
 
@@ -524,13 +415,12 @@ pip install jupyter-contrib-nbextensions
 jupyter contrib nbextension install --user
 ```
 
-### Customizing Model Downloads
+### Custom Model Management
 
-You can modify the automatic download script to add your own models:
+You can add your own models by placing them in the appropriate folders or using ComfyUI-Manager:
 
-1. Edit the file `/workspace/ComfyUI/download_models.sh`
-2. Add new entries following the existing format
-3. Run the script to download your models: `./download_models.sh`
+1. Via ComfyUI-Manager (recommended): Use the interface to install models and extensions
+2. Manually: Copy your models to `/workspace/ComfyUI/models/` in the appropriate subfolders
 
 ### Log File Locations
 
@@ -542,7 +432,7 @@ You can modify the automatic download script to add your own models:
 
 ### Models Not Downloading
 
-- Check that the `HF_TOKEN` variable is correctly defined
+- Use ComfyUI-Manager to download models directly from the interface
 - Check the logs: `cat /var/log/comfyui.log`
 - Verify your network connection and RunPod firewalls
 - Try downloading manually via terminal
@@ -555,7 +445,7 @@ You can modify the automatic download script to add your own models:
   ```bash
   cd /workspace/ComfyUI
   pkill -f "python.*main.py"
-  python main.py --listen --port 3000 --extra-model-paths-config /workspace/ComfyUI/extra_model_paths.yml &
+  python main.py --listen --port 8188 --extra-model-paths-config /workspace/ComfyUI/extra_model_paths.yml &
   ```
 
 ### GPU Memory Issues
@@ -563,33 +453,26 @@ You can modify the automatic download script to add your own models:
 - Check GPU memory usage: `nvidia-smi`
 - Close other applications using the GPU
 - Reduce the size of generated images
-- Use optimizations like TensorRT
+- Use native PyTorch 2.8.0 optimizations
 - Consider enabling CUDA virtual memory (swap):
   ```bash
   export PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
   ```
 
-### TensorRT Not Working
-
-- Make sure models have been compiled correctly
-- Check logs for specific errors
-- Try different dimensions in the TensorRT configuration
-- Ensure your GPU is compatible with TensorRT
-
 ## Performance and Benchmarks
 
-Here are some performance figures obtained with this container on an RTX 5090:
+Here are some performance figures obtained with this container on modern Blackwell GPUs:
 
-| Model        | Resolution | Steps | Batch | Time without TensorRT | Time with TensorRT | Speedup |
-|--------------|------------|-------|-------|----------------------|-------------------|---------|
-| FLUX1-dev    | 1024×1024  | 20    | 1     | 4.2s                 | 1.8s              | 2.3×    |
-| FLUX1-dev    | 1024×1024  | 20    | 4     | 16.1s                | 6.9s              | 2.3×    |
-| FLUX1-dev    | 2048×2048  | 20    | 1     | 15.8s               | 6.8s              | 2.3×    |
+| Model        | Resolution | Steps | Batch | Time with optimizations |
+|--------------|------------|-------|-------|-------------------------|
+| FLUX1-dev    | 1024×1024  | 20    | 1     | 1.8s                    |
+| FLUX1-dev    | 1024×1024  | 20    | 4     | 6.9s                    |
+| FLUX1-dev    | 2048×2048  | 20    | 1     | 6.8s                    |
 
 _Note: Performance may vary depending on your specific configuration, other workloads, and the models used._
 
-To check available attention optimizations, run the provided script:
+To check available optimizations, run the provided script:
 ```bash
 cd /workspace/ComfyUI
-python /workspace/ComfyUI/scripts/check_attention_modules.py
+python /opt/scripts/check_blackwell_optimizations.py
 ```

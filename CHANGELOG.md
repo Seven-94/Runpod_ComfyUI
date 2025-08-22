@@ -1,102 +1,47 @@
-# Changelog - Runpod ComfyUI
+# Changelog
 
-Toutes les modifications notables de ce projet seront documentées dans ce fichier.
+Toutes les modifications importantes de ce projet seront documentées dans ce fichier.
 
-Le format est basé sur [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
-et ce projet adhère à [Semantic Versioning](https://semver.org/lang/fr/).
+## [0.1.0] - 2025-08-23
 
-## [2.1.0] - 2025-08-22
+### 🚀 Version initiale
+- **ComfyUI v0.3.51** - Dernière version stable de ComfyUI
+- **Optimisations GPU Blackwell** - Support natif pour les GPU B200/B100
+- **Base PyTorch 2.8.0 + CUDA 12.9** - Performance maximale avec les derniers drivers
+- **Conteneur propre** - Aucun modèle pré-téléchargé pour un démarrage rapide
 
-### ✨ Ajouté
-- **FLUX.1-Kontext-dev** - Nouveau modèle d'édition d'images contextuelle (23.8GB)
-  - Édition d'images basée sur des instructions textuelles
-  - Maintien de la cohérence des personnages et du style
-  - Support des références d'objets sans fine-tuning
-- **Modèles Wan 2.2** - Suite complète de génération vidéo
-  - **Wan 2.2 T2V A14B** - Text-to-Video avec architecture MoE (2×14B paramètres)
-  - **Wan 2.2 I2V A14B** - Image-to-Video avec architecture MoE
-  - Support résolutions 480P et 720P jusqu'à 5 secondes
-  - VAE haute compression (16×16×4) pour génération efficace
-- **Modèles Qwen Image** - Génération et édition multilingue
-  - **Qwen-Image** - Génération d'images Text-to-Image (chinois/anglais)
-  - **Qwen-Image-Edit** - Édition d'images avec support de texte précis
-  - Spécialisé dans le rendu de texte et l'édition bilingue
+### ⚡ Optimisations techniques
+- **PyTorch 2.8.0 + CUDA 12.9** - Base optimisée pour Blackwell
+- **Flash Attention 2** - Attention optimisée pour performance accrue
+- **xFormers** - Transformers efficaces pour réduction VRAM
+- **Triton** - Kernels CUDA optimisés
+- **torch.compile** - Compilation JIT pour accélération
+- **Architecture CUDA étendue** - Support jusqu'à Compute 9.0 (Blackwell)
 
-### 🔧 Amélioré
-- **Structure des répertoires de modèles** étendue
-  - Ajout des dossiers `text_to_video/`, `image_to_video/`, `style_models/`
-  - Meilleure organisation des différents types de modèles
-- **Script de téléchargement** (`download_models.sh`) mis à jour
-  - Support des nouveaux modèles avec URLs correctes
-  - Messages d'information pour les téléchargements volumineux
-  - Vérification améliorée des tailles de fichiers
-- **Configuration des chemins** (`extra_model_paths.yml`)
-  - Nouveaux chemins pour tous les types de modèles
-  - Configuration optimisée pour ComfyUI
+### 🔧 Extensions incluses
+- ✅ **ComfyUI-Manager** - Gestionnaire d'extensions
+- ✅ **ComfyUI-Crystools** - Outils utilitaires avancés  
+- ✅ **ComfyUI-KJNodes** - Nœuds étendus de Kijai
 
-### 📁 Nouveaux Fichiers
-- `docs/NOUVEAUX_MODELES.md` - Documentation complète des nouveaux modèles
-- `scripts/check_models.sh` - Script de vérification des modèles installés
-- `scripts/cleanup_models.sh` - Script de nettoyage pour libérer l'espace disque
-- `CHANGELOG.md` - Ce fichier de changelog
+### 🗂️ Architecture
+- **Scripts de configuration** :
+  - `start.sh` - Script principal de démarrage
+  - `pre_start.sh` - Initialisation de ComfyUI
+  - `check_blackwell_optimizations.py` - Vérification des optimisations GPU
+- **Configuration nginx** optimisée pour ComfyUI
 
-### 📚 Documentation
-- **README.md** mis à jour avec les nouveaux modèles
-- Documentation détaillée des fonctionnalités de chaque modèle
-- Guide d'utilisation des nouveaux scripts utilitaires
-- Informations sur les exigences matérielles et optimisations
+### 💾 Caractéristiques
+- **Taille d'image optimisée** - Pas de modèles pré-téléchargés
+- **Démarrage rapide** - Installation à la volée des extensions
+- **Support multi-GPU** - Optimisations pour clusters GPU
+- **Compatibilité RunPod** - Configuration spécialisée pour l'infrastructure RunPod
 
-### 🛠️ Scripts Utilitaires
-- **check_models.sh** - Vérification automatisée des modèles
-  - Contrôle de la présence et taille des fichiers
-  - Affichage coloré du statut de chaque modèle
-  - Calcul de l'espace disque utilisé
-- **cleanup_models.sh** - Gestion de l'espace disque
-  - Options de nettoyage sélectif par catégorie
-  - Confirmation avant suppression
-  - Analyse de l'utilisation de l'espace
+### 📋 Note de version
+Cette version 0.1.0 représente une refonte complète du conteneur ComfyUI pour RunPod, optimisée pour les GPU Blackwell et une expérience utilisateur améliorée. Les prochaines versions suivront le versioning sémantique standard.
 
-### 🐳 Docker
-- **Dockerfile** mis à jour pour inclure les nouveaux scripts
-- Copie automatique des scripts utilitaires dans `/opt/scripts/`
-- Permissions d'exécution automatiques pour tous les scripts
-
-## [2.0.0] - 2025-07-15
-
-### ✨ Ajouté
-- Support CUDA 12.8 pour GPUs de dernière génération
-- Image de base NGC PyTorch 25.02
-- Modèles FLUX.1 complets (dev, Fill, Depth, Canny, Redux)
-- Support architecture GPU étendu (8.6, 9.0, 12.0, 12.6)
-- ComfyUI-Manager et extensions pré-installées
-- Configuration Nginx optimisée
-- Support JupyterLab intégré
-
-### 🔧 Modifié
-- Migration vers l'image NGC pour meilleures performances
-- Optimisations TensorRT intégrées
-- xFormers pré-compilé pour réduction VRAM
-
-### 📚 Documentation
-- Guide d'installation complet
-- Documentation des optimisations RTX 5090
-- Instructions de déploiement RunPod
-
-## [1.0.0] - 2025-06-01
-
-### ✨ Première version
-- Image Docker de base pour ComfyUI
-- Support CUDA basique
-- Téléchargement automatique des modèles FLUX.1-dev
-- Configuration de base pour RunPod
+### 🐛 Améliorations
+- Permissions optimisées sur les fichiers de script
+- Gestion améliorée des volumes réseau
+- Démarrage optimisé de nginx et SSH
 
 ---
-
-## Types de changements
-- `✨ Ajouté` pour les nouvelles fonctionnalités
-- `🔧 Modifié` pour les changements dans les fonctionnalités existantes  
-- `🐛 Corrigé` pour les corrections de bugs
-- `🗑️ Supprimé` pour les fonctionnalités supprimées
-- `🔒 Sécurité` pour les corrections de vulnérabilités
-- `📚 Documentation` pour les changements de documentation uniquement
-- `🐳 Docker` pour les changements liés au conteneur Docker

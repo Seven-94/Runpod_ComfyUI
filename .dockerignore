@@ -1,27 +1,47 @@
-# Git
+# Git et versioning
 .git
 .gitignore
 .gitattributes
 
-# Documentation
+# Documentation (non nécessaire dans l'image)
 *.md
 docs/
 CHANGELOG.md
 LICENSE
+AUTO-BUILD.md
 
-# GitHub workflows
+# GitHub workflows et outils de développement
 .github/
+test-version-check.sh
+build.sh
+# GitHub Copilot
+.github/copilot.instructions.md
+config/.github/copilot.instructions.md
+# Scripts de test et debugging
+test-*.sh
+check-*.py
+debug-*
 
-# Temporary files
+# Fichiers temporaires et logs
 *.tmp
 *.temp
 *.log
+*.backup
+*.bak
+*.orig
+build.log
+docker-build.log
+comfyui.log
+test-output/
 
-# IDE files
+# IDE et éditeurs
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
+.vim/
+.emacs.d/
 
 # Cache directories
 __pycache__/
@@ -59,9 +79,28 @@ ENV/
 ehthumbs.db
 Thumbs.db
 
-# Large model files (ces fichiers seront téléchargés à l'exécution)
+# Configurations personnelles (ne doivent pas être dans l'image)
+credentials.json
+secrets.json
+auth.json
+.env.local
+.env.production
+config.local.*
+**/secrets/
+
+# Large model files (téléchargés à l'exécution, pas dans l'image)
 *.safetensors
 *.ckpt
 *.pth
 *.bin
 *.pt
+*.onnx
+*.weights
+models/
+
+# Archives (non nécessaires dans l'image)
+*.tar
+*.tar.gz
+*.zip
+*.7z
+*.rar

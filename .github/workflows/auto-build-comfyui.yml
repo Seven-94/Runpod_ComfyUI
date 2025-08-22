@@ -1,0 +1,205 @@
+name: ComfyUI Auto Build
+
+on:
+  schedule:
+    # Exécute à 6h du matin heure de Paris (4h UTC - été, 5h UTC - hiver)
+    # Nous utilisons 4h UTC pour couvrir l'heure d'été
+    - cron: "0 4 * * *"
+  # Permet l'exécution manuelle depuis l'interface GitHub
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: 'Forcer le build même sans nouvelle version'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: runpod-comfyui
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.version-check.outputs.should_build }}
+      comfyui_version: ${{ steps.version-check.outputs.comfyui_version }}
+      current_tag: ${{ steps.version-check.outputs.current_tag }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check ComfyUI latest version
+        id: version-check
+        run: |
+          # Récupérer la dernière version de ComfyUI depuis GitHub API
+          LATEST_COMFYUI=$(curl -s https://api.github.com/repos/comfyanonymous/ComfyUI/releases/latest | jq -r .tag_name)
+          echo "Dernière version ComfyUI: $LATEST_COMFYUI"
+          
+          # Récupérer notre version actuelle depuis le fichier VERSION
+          CURRENT_VERSION=$(cat VERSION)
+          echo "Version actuelle du conteneur: $CURRENT_VERSION"
+          
+          # Vérifier si notre image existe déjà avec cette version ComfyUI
+          IMAGE_TAG="${CURRENT_VERSION}-comfyui-${LATEST_COMFYUI}"
+          echo "Tag recherché: $IMAGE_TAG"
+          
+          # Vérifier si l'image existe sur Docker Hub via l'API
+          REPO_NAME="${{ secrets.DOCKERHUB_USERNAME }}/${IMAGE_NAME}"
+          if curl -f -s "https://hub.docker.com/v2/repositories/${REPO_NAME}/tags/${IMAGE_TAG}/" > /dev/null 2>&1; then
+            echo "Image déjà existante avec ComfyUI $LATEST_COMFYUI"
+            SHOULD_BUILD="false"
+          else
+            echo "Nouvelle version ComfyUI détectée ou image manquante"
+            SHOULD_BUILD="true"
+          fi
+          
+          # Forcer le build si demandé manuellement
+          if [ "${{ github.event.inputs.force_build }}" == "true" ]; then
+            echo "Build forcé via workflow_dispatch"
+            SHOULD_BUILD="true"
+          fi
+          
+          echo "should_build=$SHOULD_BUILD" >> $GITHUB_OUTPUT
+          echo "comfyui_version=$LATEST_COMFYUI" >> $GITHUB_OUTPUT
+          echo "current_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+  build-and-push:
+    needs: check-version
+    if: needs.check-version.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update ComfyUI version in Dockerfile
+        run: |
+          COMFYUI_VERSION="${{ needs.check-version.outputs.comfyui_version }}"
+          echo "Mise à jour vers ComfyUI $COMFYUI_VERSION"
+          
+          # Mettre à jour l'ARG par défaut dans le Dockerfile
+          sed -i "s|ARG COMFYUI_VERSION=v[0-9.]*|ARG COMFYUI_VERSION=$COMFYUI_VERSION|g" Dockerfile
+          
+          # Vérifier le changement
+          grep "ARG COMFYUI_VERSION" Dockerfile
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Generate metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ needs.check-version.outputs.current_tag }}
+            type=raw,value=v{{date 'YYYY.MM.DD'}}
+          labels: |
+            org.opencontainers.image.title=ComfyUI RunPod Blackwell
+            org.opencontainers.image.description=Conteneur ComfyUI optimisé pour GPU Blackwell avec PyTorch 2.8.0
+            org.opencontainers.image.version=${{ needs.check-version.outputs.current_tag }}
+            comfyui.version=${{ needs.check-version.outputs.comfyui_version }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+            COMFYUI_VERSION=${{ needs.check-version.outputs.comfyui_version }}
+
+      - name: Update repository with new version
+        if: success()
+        run: |
+          # Mettre à jour le README avec la nouvelle version
+          COMFYUI_VERSION="${{ needs.check-version.outputs.comfyui_version }}"
+          sed -i "s/ComfyUI v[0-9.]*/ComfyUI $COMFYUI_VERSION/g" README.md
+          
+          # Commit et push les changements (optionnel)
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add Dockerfile README.md
+          git diff --staged --quiet || git commit -m "Auto-update ComfyUI to $COMFYUI_VERSION"
+          # git push  # Décommenté si vous voulez auto-commit
+
+      - name: Create GitHub Release
+        if: success()
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ needs.check-version.outputs.current_tag }}
+          name: "Auto-build ComfyUI ${{ needs.check-version.outputs.comfyui_version }}"
+          body: |
+            🚀 **Build automatique quotidien**
+            
+            **Nouvelles fonctionnalités:**
+            - ComfyUI mis à jour vers ${{ needs.check-version.outputs.comfyui_version }}
+            - PyTorch 2.8.0 + CUDA 12.9
+            - Optimisations GPU Blackwell
+            
+            **Image Docker:**
+            ```bash
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ needs.check-version.outputs.current_tag }}
+            ```
+            
+            **Extensions incluses:**
+            - ComfyUI-Manager
+            - ComfyUI-Crystools  
+            - ComfyUI-KJNodes
+            
+            **Compatibilité GPU:**
+            - Blackwell (B200, B100) - Compute 9.0
+            - Hopper (H100, H200) - Compute 9.0
+            - Ada Lovelace (RTX 4090, 4080) - Compute 8.9
+            - Ampere (RTX 3090, 3080) - Compute 8.6+
+          draft: false
+          prerelease: false
+
+  notify-completion:
+    needs: [check-version, build-and-push]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notification de fin
+        run: |
+          if [ "${{ needs.check-version.outputs.should_build }}" == "true" ]; then
+            if [ "${{ needs.build-and-push.result }}" == "success" ]; then
+              echo "✅ Build réussi pour ComfyUI ${{ needs.check-version.outputs.comfyui_version }}"
+              echo "🐳 Image disponible: ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ needs.check-version.outputs.current_tag }}"
+            else
+              echo "❌ Échec du build"
+              exit 1
+            fi
+          else
+            echo "ℹ️ Aucun build nécessaire - ComfyUI ${{ needs.check-version.outputs.comfyui_version }} déjà à jour"
+          fi

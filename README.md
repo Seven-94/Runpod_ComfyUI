@@ -1,241 +1,167 @@
-# ComfyUI pour RunPod avec CUDA 12.8 - Compatible RTX 5090
+# ComfyUI pour RunPod - Optimisé GPU Blackwell v0.1.0
 
-Ce dépôt contient les fichiers nécessaires pour créer un conteneur Docker optimisé pour exécuter ComfyUI sur la plateforme RunPod avec CUDA 12.8, spécialement configuré pour les GPU NVIDIA de dernière génération, y compris la RTX 5090.
+Ce dépôt contient un conteneur Docker optimisé pour exécuter ComfyUI v0.3.51 sur la plateforme RunPod, spécialement configuré pour les GPU NVIDIA Blackwell (B200, B100) et autres GPU de dernière génération.
 
+## 🚀 Fonctionnalités
 
-## Fonctionnalités
-
-- **Base CUDA 12.8** - Support complet des GPU de dernière génération (RTX 5090, 4090, 4080, etc.)
-- **Image NGC PyTorch 25.02** - Utilise l'image officielle NVIDIA NGC avec PyTorch pour des performances maximales
-- **Architecture GPU étendue** - Support natif pour les compute capabilities 8.6, 9.0, 12.0 et 12.6
-- **Téléchargement automatique des modèles** - Les modèles sont téléchargés depuis Hugging Face au premier démarrage
-- **Extensions pré-installées** - ComfyUI-Manager, sdxl_prompt_styler, ComfyUI_TensorRT et plus
+- **ComfyUI v0.3.51** - La dernière version stable de ComfyUI
+- **Optimisations GPU Blackwell** - Support natif pour les architectures de calcul 9.0 et supérieures
+- **Base PyTorch 2.8.0 + CUDA 12.9** - Performance maximale avec les derniers drivers
+- **Extensions pré-installées** :
+  - ComfyUI-Manager
+  - ComfyUI-Crystools  
+  - ComfyUI-KJNodes
+- **Optimisations avancées** :
+  - Flash Attention 2
+  - xFormers
+  - Triton
+  - torch.compile
+  - Allocation mémoire optimisée
+- **Conteneur propre** - Aucun modèle pré-téléchargé, démarrage rapide
 - **Interface web avec Nginx** - Configuration optimisée pour l'accès à distance
-- **Support JupyterLab** - Pour le développement et l'exploration des fonctionnalités
-- **Persistance des données** - Les modèles et les configurations sont conservés dans un volume network
+- **Support JupyterLab** - Pour le développement et l'exploration
+- **Persistance des données** - Configuration conservée dans un volume network
 
-## Prérequis
+## 🏗️ Architecture supportée
 
-- Docker installé sur votre machine (pour la construction de l'image)
-- Si vous utilisez un Mac avec puce Apple Silicon (M1/M2/M3), utilisez Docker Desktop avec support d'émulation
+- **GPU Blackwell** : B200, B100 (Compute 9.0)
+- **GPU Hopper** : H200, H100 (Compute 9.0)  
+- **GPU Ada Lovelace** : RTX 4090, 4080, 4070 (Compute 8.9)
+- **GPU Ampere** : RTX 3090, 3080, A100 (Compute 8.6+)
+
+## 🚀 Démarrage rapide
+
+### Prérequis
+- Docker installé sur votre machine  
 - Un compte RunPod avec des crédits ou un GPU disponible
-- Un compte Hugging Face (pour le téléchargement des modèles)
 
-## Démarrage rapide
-
-1. **Clonez ce dépôt** :
+### 1. Clonez ce dépôt
 ```bash
 git clone https://github.com/Seven-94/Runpod_ComfyUI.git
 cd Runpod_ComfyUI
 ```
 
-2. **Construisez l'image Docker** :
+### 2. Construisez l'image Docker
 ```bash
-# Sur x86_64/amd64 (Linux, Windows)
-docker build -t runpod_comfyui .
-
-# Sur Mac M1/M2/M3 (arm64)
-docker buildx build --platform=linux/amd64 -t runpod_comfyui .
+docker build -t runpod_comfyui:v0.1.0 .
 ```
 
-3. **Publiez l'image sur Docker Hub** :
+**Pour build multi-architecture (recommandé pour publication) :**
 ```bash
-docker tag runpod_comfyui votre-username/runpod_comfyui:latest
-docker push votre-username/runpod_comfyui:latest
+docker buildx build --platform=linux/amd64 -t runpod_comfyui:v0.1.0 .
 ```
 
-4. **Déployez sur RunPod** :
-   - Créez un template avec votre image Docker
-   - Configurez la commande de démarrage : `/start.sh`
-   - Exposez les ports HTTP : `8188,8888,3000`
-   - Exposez les ports TCP : `22`
-   - Ajoutez la variable d'environnement `HF_TOKEN` avec votre token Hugging Face
+**Pour publier sur Docker Hub :**
+```bash
+docker tag runpod_comfyui:v0.1.0 votre-username/runpod_comfyui:v0.1.0
+docker push votre-username/runpod_comfyui:v0.1.0
+```
 
-## Modèles inclus
+### 3. Déployez sur RunPod
+- Créez un template avec votre image Docker
+- Configurez la commande de démarrage : `/start.sh`
+- Exposez les ports HTTP : `3000,8188,8888,22`
+## 🔧 Configuration RunPod
 
-### 🎨 Modèles FLUX (Génération d'images)
-- **T5XXL (FP16)** - Encodeur de texte pour la génération d'embeddings textuels
-- **CLIP-L** - Encodeur de texte CLIP Large pour la compréhension texte-image
-- **FLUX VAE** - Autoencodeur variationnel pour la conversion latent/image
-- **FLUX1-dev** - Modèle de diffusion FLUX1 (version développeur)
-- **FLUX1-Fill-dev** - Modèle FLUX pour le remplissage d'images (inpainting)
-- **FLUX1-Depth-dev** - Modèle FLUX guidé par la profondeur
-- **FLUX1-Canny-dev** - Modèle FLUX guidé par les contours Canny
-- **FLUX1-Redux-dev** - Modèle FLUX pour la stylisation avancée
+### Variables d'environnement optionnelles
+- `JUPYTER_PASSWORD` : Active JupyterLab avec le mot de passe spécifié
+- `PUBLIC_KEY` : Clé SSH publique pour l'accès sécurisé
 
-### ✨ NOUVEAUX MODÈLES (Mise à jour 2025)
-- **🖼️ FLUX.1-Kontext-dev** - Édition d'images contextuelle avec cohérence de personnage
-- **📹 Wan 2.2 T2V A14B** - Génération vidéo Text-to-Video avec architecture MoE
-- **📹 Wan 2.2 I2V A14B** - Génération vidéo Image-to-Video avec architecture MoE  
-- **🌏 Qwen-Image** - Génération d'images multilingue (chinois/anglais)
-- **🌏 Qwen-Image-Edit** - Édition d'images multilingue avec texte précis
+### Ports exposés
+- `3000` : Interface ComfyUI (nginx proxy)
+- `8188` : ComfyUI service direct
+- `8888` : JupyterLab (si activé)
+- `22` : SSH
 
-### 🔍 Modèles de support
-- **Sigclip Vision** - Modèle de vision pour ComfyUI
-
-> **📚 Documentation détaillée:** Consultez [NOUVEAUX_MODELES.md](docs/NOUVEAUX_MODELES.md) pour une description complète des nouveaux modèles et de leurs fonctionnalités.
-
-## Organisation des répertoires
+## � Structure des répertoires
 
 ```
-/workspace/ComfyUI/              # Répertoire principal de ComfyUI
-├── custom_nodes/                # Extensions et nœuds personnalisés
+/workspace/ComfyUI/              # Répertoire principal de ComfyUI  
+├── custom_nodes/                # Extensions préinstallées
 │   ├── ComfyUI-Manager/         # Gestionnaire d'extensions
-│   ├── ComfyUI_TensorRT/        # Optimisations TensorRT
-│   └── sdxl_prompt_styler/      # Stylisation de prompts pour SDXL
-├── input/                       # Répertoire pour les fichiers d'entrée
-├── models/                      # Tous les modèles
-│   ├── checkpoints/             # Modèles de base (checkpoint)
-│   ├── clip/                    # Modèles CLIP
-│   ├── clip_vision/             # Modèles CLIP Vision
-│   ├── controlnet/              # Modèles ControlNet
-│   ├── diffusion_models/        # Modèles de diffusion (FLUX, Qwen)
-│   ├── embeddings/              # Embeddings textuels
-│   ├── loras/                   # LoRA models
+│   ├── ComfyUI-Crystools/       # Outils utilitaires avancés
+│   └── ComfyUI-KJNodes/         # Nœuds étendus de Kijai
+├── input/                       # Fichiers d'entrée
+├── models/                      # Modèles (vide au démarrage)
+│   ├── checkpoints/             # Modèles de base
 │   ├── text_encoders/           # Encodeurs de texte
-│   ├── text_to_video/           # Modèles Text-to-Video (Wan 2.2)
-│   ├── image_to_video/          # Modèles Image-to-Video (Wan 2.2)
-│   ├── style_models/            # Modèles de style (Redux)
-│   ├── upscale_models/          # Modèles d'upscaling
-│   └── vae/                     # Modèles VAE (FLUX, Wan, Qwen)
-└── output/                      # Images et vidéos générées
+│   ├── diffusion_models/        # Modèles de diffusion
+│   ├── vae/                     # Variational Auto-Encoders
+│   └── ...                      # Autres types de modèles
+├── output/                      # Images/vidéos générées
+└── extra_model_paths.yml        # Configuration des chemins
 ```
 
-## Optimisations pour RTX 5090
+## 🎯 Optimisations GPU Blackwell
 
-Cette image est spécialement optimisée pour tirer pleinement parti des GPU de dernière génération comme la RTX 5090 :
+Cette image intègre de nombreuses optimisations pour les GPU de dernière génération :
 
-- **Support d'architecture avancé** - Prise en charge native des architectures CUDA 8.6, 9.0, 12.0 et 12.6
-- **Optimisations TensorRT** - Conversion des modèles pour une inférence accélérée
-- **Transferts HF optimisés** - Utilise le nouveau backend de transfert HF pour des téléchargements plus rapides
-- **xFormers intégré** - Optimisations d'attention pour réduire l'utilisation de VRAM et accélérer le traitement
+### Optimisations mémoire
+- `PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True`
+- `CUDA_MODULE_LOADING=LAZY`
+- `CUBLAS_WORKSPACE_CONFIG=:4096:8`
 
-## Accès aux services
+### Optimisations de calcul
+- Flash Attention 2 pour l'attention optimisée
+- xFormers pour les transformers efficaces
+- Triton pour les kernels CUDA optimisés
+- torch.compile pour la compilation JIT
+- Arguments ComfyUI optimisés : `--force-fp16`, `--use-split-cross-attention`
 
-- **ComfyUI** : http://votre-pod-ip:3000
-- **JupyterLab** : http://votre-pod-ip:8888 (si activé via la variable `JUPYTER_PASSWORD`)
+### Vérification des optimisations
+```bash
+# Dans le conteneur, vérifiez que tout est correctement configuré
+python /opt/scripts/check_blackwell_optimizations.py
+```
+
+## 📱 Accès aux services
+
+- **ComfyUI** : `http://votre-pod-ip:3000`
+- **JupyterLab** : `http://votre-pod-ip:8888` (si activé)
 - **SSH** : `ssh root@votre-pod-ip` (mot de passe : runpod)
 
-## Documentation complète
+## 📦 Installation des modèles
 
-Pour des instructions détaillées sur la configuration, l'utilisation et les fonctionnalités avancées, consultez le [Guide d'utilisation](docs/GUIDE.md).
+Ce conteneur ne contient aucun modèle pré-téléchargé pour rester léger et rapide au démarrage.
+Pour installer des modèles :
 
-## Contribution
+1. **Via ComfyUI-Manager** (recommandé)
+   - Accédez à ComfyUI sur le port 3000
+   - Utilisez le Manager pour installer les modèles souhaités
+
+2. **Manuellement** 
+   - Placez vos modèles dans `/workspace/ComfyUI/models/`
+   - Suivez la structure des répertoires standard de ComfyUI
+
+## 🚀 Fonctionnalités v0.1.0
+
+- ✅ ComfyUI v0.3.51 (dernière version)
+- ✅ Support GPU Blackwell optimisé  
+- ✅ Extensions modernes préinstallées
+- ✅ Conteneur propre sans modèles
+- ✅ Optimisations mémoire et calcul avancées
+- ✅ Architecture supportée jusqu'à Compute 9.0
+- ✅ Flash Attention 2 + xFormers + Triton
+
+## 📚 Documentation
+
+Pour des instructions détaillées, consultez le [Guide d'utilisation](docs/GUIDE.md).
+
+### 📋 Fichiers de référence
+
+- **`AUTO-BUILD.md`** - Documentation du système de build automatique GitHub Actions
+- **`Dockerfile.multistage`** - Version multi-stage du Dockerfile (expérimentale, non utilisée en production)
+- **`build.sh`** - Script de build local pour développement
+- **`test-version-check.sh`** - Script de test pour vérification des versions
+
+## 🤝 Contribution
 
 Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
 
-## Licence
+## 📄 Licence
 
 Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
 
 ---
 
-# ComfyUI for RunPod with CUDA 12.8 - RTX 5090 Compatible
-
-This repository contains the files needed to create an optimized Docker container to run ComfyUI on the RunPod platform with CUDA 12.8, specially configured for the latest NVIDIA GPUs, including the RTX 5090.
-
-## Features
-
-- **CUDA 12.8 Base** - Full support for latest generation GPUs (RTX 5090, 4090, 4080, etc.)
-- **NGC PyTorch 25.02 Image** - Uses official NVIDIA NGC image with PyTorch for maximum performance
-- **Extended GPU Architecture** - Native support for compute capabilities 8.6, 9.0, 12.0, and 12.6
-- **Automatic Model Download** - Models are downloaded from Hugging Face on first startup
-- **Pre-installed Extensions** - ComfyUI-Manager, sdxl_prompt_styler, ComfyUI_TensorRT, and more
-- **Web Interface with Nginx** - Optimized configuration for remote access
-- **JupyterLab Support** - For development and feature exploration
-- **Data Persistence** - Models and configurations are preserved in a network volume
-
-## Prerequisites
-
-- Docker installed on your machine (for building the image)
-- If using a Mac with Apple Silicon (M1/M2/M3), use Docker Desktop with emulation support
-- A RunPod account with credits or an available GPU
-- A Hugging Face account (for model downloading)
-
-## Quick Start
-
-1. **Clone this repository**:
-```bash
-git clone https://github.com/Seven-94/Runpod_ComfyUI.git
-cd Runpod_ComfyUI
-```
-
-2. **Build the Docker image**:
-```bash
-# On x86_64/amd64 (Linux, Windows)
-docker build -t runpod_comfyui .
-
-# On Mac M1/M2/M3 (arm64)
-docker buildx build --platform=linux/amd64 -t runpod_comfyui .
-```
-
-3. **Publish the image to Docker Hub**:
-```bash
-docker tag runpod_comfyui your-username/runpod_comfyui:latest
-docker push your-username/runpod_comfyui:latest
-```
-
-4. **Deploy on RunPod**:
-   - Create a template with your Docker image
-   - Configure the start command: `/start.sh`
-   - Expose HTTP ports: `8188,8888,3000`
-   - Expose TCP ports: `22`
-   - Add the `HF_TOKEN` environment variable with your Hugging Face token
-
-## Included Models
-
-The following models are automatically downloaded from Hugging Face:
-- **T5XXL (FP16)** - Text encoder for generating text embeddings
-- **CLIP-L** - CLIP Large text encoder for text-image understanding
-- **FLUX VAE** - Variational autoencoder for latent/image conversion
-- **FLUX1-dev** - FLUX1 diffusion model (developer version)
-
-## Directory Organization
-
-```
-/workspace/ComfyUI/              # Main ComfyUI directory
-├── custom_nodes/                # Extensions and custom nodes
-│   ├── ComfyUI-Manager/         # Extension manager
-│   ├── ComfyUI_TensorRT/        # TensorRT optimizations
-│   └── sdxl_prompt_styler/      # Prompt styling for SDXL
-├── input/                       # Directory for input files
-├── models/                      # All models
-│   ├── checkpoints/             # Base models (checkpoint)
-│   ├── clip/                    # CLIP models
-│   ├── clip_vision/             # CLIP Vision models
-│   ├── controlnet/              # ControlNet models
-│   ├── diffusion_models/        # Diffusion models (like Flux)
-│   ├── embeddings/              # Text embeddings
-│   ├── loras/                   # LoRA models
-│   ├── text_encoders/           # Text encoders
-│   ├── upscale_models/          # Upscaling models
-│   └── vae/                     # VAE models
-└── output/                      # Generated images
-```
-
-## RTX 5090 Optimizations
-
-This image is specially optimized to take full advantage of the latest generation GPUs like the RTX 5090:
-
-- **Advanced Architecture Support** - Native support for CUDA architectures 8.6, 9.0, 12.0, and 12.6
-- **TensorRT Optimizations** - Model conversion for accelerated inference
-- **Optimized HF Transfers** - Uses the new HF transfer backend for faster downloads
-- **Built-in xFormers** - Attention optimizations to reduce VRAM usage and speed up processing
-
-## Accessing Services
-
-- **ComfyUI**: http://your-pod-ip:3000
-- **JupyterLab**: http://your-pod-ip:8888 (if enabled via the `JUPYTER_PASSWORD` variable)
-- **SSH**: `ssh root@your-pod-ip` (password: runpod)
-
-## Complete Documentation
-
-For detailed instructions on configuration, usage, and advanced features, check the [User Guide](docs/GUIDE.md).
-
-## Contributing
-
-Contributions are welcome! Feel free to open an issue or pull request.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+**Optimisé pour les GPU Blackwell | ComfyUI v0.3.51 | Docker | RunPod**

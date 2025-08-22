@@ -48,8 +48,16 @@ start_jupyter() {
 
 # Export RunPod environment variables to shell
 export_env_vars() {
-    printenv | grep -E '^RUNPOD_|^PATH=' | awk -F = '{ print "export " $1 "=\"" $2 "\"" }' >> /etc/rp_environment
-    echo 'source /etc/rp_environment' >> ~/.bashrc
+    # S'assurer que le répertoire /etc existe et est accessible
+    if [ -d "/etc" ] && [ -w "/etc" ]; then
+        if ! printenv | grep -E '^RUNPOD_|^PATH=' | awk -F = '{ print "export " $1 "=\"" $2 "\"" }' >> /etc/rp_environment; then
+            echo "AVERTISSEMENT: Impossible d'écrire les variables d'environnement dans /etc/rp_environment"
+        else
+            echo 'source /etc/rp_environment' >> ~/.bashrc
+        fi
+    else
+        echo "AVERTISSEMENT: Répertoire /etc non accessible, variables d'environnement non sauvegardées"
+    fi
     
     # Définir le répertoire de travail par défaut dans .bashrc
     echo 'cd /workspace/ComfyUI' >> ~/.bashrc
@@ -63,9 +71,16 @@ echo "Démarrage des services..."
 
 # Exécuter le script de pré-démarrage
 echo "Exécution du script de pré-démarrage..."
-bash /pre_start.sh
+if ! bash /pre_start.sh; then
+    echo "ERREUR: Le script de pré-démarrage a échoué"
+    exit 1
+fi
 
 # S'assurer que le répertoire de travail est correct
+if [ ! -d "/workspace/ComfyUI" ]; then
+    echo "ERREUR: Le répertoire ComfyUI n'a pas été créé correctement"
+    exit 1
+fi
 cd /workspace/ComfyUI
 
 # Démarrer les autres services

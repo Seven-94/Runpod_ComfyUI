@@ -1,6 +1,12 @@
 # Multi-stage Dockerfile pour réduire la taille finale
+# ATTENTION: Ce fichier est expérimental et non utilisé en production
+# Utilisez le Dockerfile principal pour le build de production
+
+# Argument pour la version de ComfyUI (par défaut v0.3.51)
+ARG COMFYUI_VERSION=v0.3.51
+
 # Stage 1: Build stage
-FROM nvcr.io/nvidia/pytorch:25.02-py3 AS builder
+FROM pytorch/pytorch:2.8.0-cuda12.9-cudnn9-devel AS builder
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -19,37 +25,60 @@ RUN python3 -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 RUN pip install --upgrade pip setuptools wheel && \
-    pip install einops safetensors jupyterlab ipywidgets
+    pip install \
+        einops safetensors jupyterlab ipywidgets \
+        flash-attn --no-build-isolation \
+        torch-audio-addons \
+        triton \
+        xformers
 
-# Clonage des repos
+# Clonage de ComfyUI avec version dynamique
 WORKDIR /tmp
-RUN git clone --depth 1 https://github.com/comfyanonymous/ComfyUI.git /tmp/ComfyUI && \
+RUN git clone --depth 1 --branch ${COMFYUI_VERSION} https://github.com/comfyanonymous/ComfyUI.git /tmp/ComfyUI && \
     cd /tmp/ComfyUI && \
     pip install -r requirements.txt
 
 RUN mkdir -p /tmp/extensions && \
+    # ComfyUI-Manager
     git clone --depth 1 https://github.com/ltdrdata/ComfyUI-Manager.git /tmp/extensions/ComfyUI-Manager && \
-    git clone --depth 1 https://github.com/twri/sdxl_prompt_styler /tmp/extensions/sdxl_prompt_styler && \
-    git clone --depth 1 https://github.com/comfyanonymous/ComfyUI_TensorRT /tmp/extensions/ComfyUI_TensorRT
+    cd /tmp/extensions/ComfyUI-Manager && \
+    pip install -r requirements.txt || echo "Pas de requirements.txt pour ComfyUI-Manager" && \
+    # ComfyUI-Crystools
+    git clone --depth 1 https://github.com/crystian/ComfyUI-Crystools.git /tmp/extensions/ComfyUI-Crystools && \
+    cd /tmp/extensions/ComfyUI-Crystools && \
+    if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi && \
+    # ComfyUI-KJNodes  
+    git clone --depth 1 https://github.com/kijai/ComfyUI-KJNodes.git /tmp/extensions/ComfyUI-KJNodes && \
+    cd /tmp/extensions/ComfyUI-KJNodes && \
+    if [ -f "requirements.txt" ]; then pip install -r requirements.txt; fi && \
+    rm -rf /root/.cache/pip /tmp/pip-* /var/tmp/*
+
 
 # Stage 2: Runtime stage
-FROM nvcr.io/nvidia/pytorch:25.02-py3
+FROM pytorch/pytorch:2.8.0-cuda12.9-cudnn9-devel
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Variables d'environnement
+# Variables d'environnement optimisées pour GPU Blackwell et PyTorch
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    TORCH_CUDA_ARCH_LIST="8.6+PTX;9.0+PTX;12.0+PTX;12.6+PTX" \
+    TORCH_CUDA_ARCH_LIST="8.6+PTX;9.0+PTX" \
     HF_HUB_ENABLE_HF_TRANSFER="1" \
+    CUDA_MODULE_LOADING="LAZY" \
+    TORCH_CUDNN_V8_API_ENABLED="1" \
+    TORCH_COMPILE_MODE="default" \
+    PYTORCH_CUDA_ALLOC_CONF="expandable_segments:True,roundup_power2_divisions:16" \
+    CUBLAS_WORKSPACE_CONFIG=":4096:8" \
+    TORCH_NCCL_AVOID_RECORD_STREAMS="1" \
+    PYTORCH_JIT_USE_NNC_NOT_NVFUSER="0" \
     PATH="/opt/venv/bin:$PATH"
 
-# Installation des dépendances runtime uniquement
+# Installation des dépendances runtime
 RUN apt-get update --fix-missing && \
     apt-get install -y --no-install-recommends \
     ffmpeg libsm6 libxext6 libglib2.0-0 libgl1 \
-    nginx openssh-server && \
+    nginx openssh-server git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -68,12 +97,11 @@ COPY --from=builder /tmp/extensions /opt/comfyui_extensions
 # Création des répertoires de base
 RUN mkdir -p /opt/comfyui_templates /usr/share/nginx/html
 
-# Copie des fichiers de configuration
+# Copie des fichiers de configuration 
 COPY config/nginx.conf /opt/comfyui_templates/nginx.conf
 COPY config/readme.html /opt/comfyui_templates/readme.html
 COPY config/README.md /usr/share/nginx/html/README.md
 COPY config/extra_model_paths.yml /opt/comfyui_templates/extra_model_paths.yml
-COPY config/download_models.sh /opt/comfyui_templates/download_models.sh
 COPY config/start.sh /start.sh
 COPY config/pre_start.sh /pre_start.sh
 
@@ -81,7 +109,7 @@ COPY config/pre_start.sh /pre_start.sh
 COPY scripts/ /opt/scripts/
 
 # Permissions d'exécution
-RUN chmod +x /opt/comfyui_templates/download_models.sh /pre_start.sh /start.sh /opt/scripts/*.sh
+RUN chmod +x /pre_start.sh /start.sh /opt/scripts/*.py
 
 # Exposition des ports
 EXPOSE 3000 8188 8888 22

@@ -4,7 +4,7 @@ Ce dossier contient les fichiers de configuration et les scripts nécessaires au
 
 ## Téléchargement des modèles
 
-Cette image nécessite le téléchargement de certains modèles depuis Hugging Face au premier démarrage.
+Cette image permet le téléchargement de modèles depuis Hugging Face selon vos besoins.
 
 Pour télécharger les modèles avec authentification (recommandé) :
 1. Créez un compte sur [Hugging Face](https://huggingface.co/)
@@ -13,19 +13,15 @@ Pour télécharger les modèles avec authentification (recommandé) :
    - Nom : `HF_TOKEN`
    - Valeur : votre token HuggingFace
 
-Si vous ne fournissez pas de token, l'image tentera un téléchargement anonyme, mais celui-ci pourrait échouer selon les restrictions d'accès des modèles.
+Si vous ne fournissez pas de token, vous pourrez toujours télécharger des modèles publics via ComfyUI-Manager.
 
 ## Scripts inclus
-
-### download_models.sh
-Script automatisé pour télécharger les modèles nécessaires depuis Hugging Face. Il vérifie si les modèles existent déjà avant de les télécharger pour éviter les duplications.
 
 ### pre_start.sh
 Ce script est exécuté au démarrage du conteneur pour initialiser ComfyUI :
 - Copie des fichiers ComfyUI depuis l'image Docker vers le volume
 - Création des répertoires pour les modèles
 - Installation des extensions depuis l'image Docker
-- Téléchargement des modèles manquants
 - Configuration d'extra_model_paths.yml
 - Démarrage du service ComfyUI
 
@@ -48,30 +44,18 @@ Configuration du serveur web Nginx qui sert d'interface pour accéder à ComfyUI
 ## Extensions intégrées
 
 - **ComfyUI-Manager** : Interface de gestion pour installer d'autres extensions et modèles
-- **sdxl_prompt_styler** : Permet de styliser facilement les prompts pour SDXL
-- **ComfyUI_TensorRT** : Améliore les performances en utilisant TensorRT pour optimiser les calculs
+- **ComfyUI-Crystools** : Outils utilitaires avancés  
+- **ComfyUI-KJNodes** : Nœuds étendus de Kijai
 
-## Modèles préchargés
+## Modèles
 
-Les modèles suivants sont automatiquement téléchargés au premier démarrage et placés dans les répertoires correspondants :
-
-- **t5xxl_fp16.safetensors** (Encodeur de texte)  
-  Chemin: `/workspace/ComfyUI/models/text_encoders/`
-
-- **clip_l.safetensors** (Encodeur de texte CLIP)  
-  Chemin: `/workspace/ComfyUI/models/text_encoders/`
-
-- **ae.safetensors** (VAE)  
-  Chemin: `/workspace/ComfyUI/models/vae/`
-
-- **flux1-dev.safetensors** (Modèle de diffusion)  
-  Chemin: `/workspace/ComfyUI/models/diffusion_models/`
+Vous pouvez télécharger les modèles de votre choix via ComfyUI-Manager une fois le conteneur démarré.
+Les modèles seront automatiquement placés dans les répertoires correspondants définis dans `extra_model_paths.yml`.
 
 ## Personnalisation
 
 Vous pouvez personnaliser cette configuration en modifiant les fichiers suivants :
 
-- **download_models.sh** pour télécharger d'autres modèles par défaut
 - **extra_model_paths.yml** pour ajouter des chemins de modèles supplémentaires
 - **pre_start.sh** pour ajouter des extensions ou des configurations supplémentaires
 
@@ -83,7 +67,7 @@ This folder contains configuration files and scripts necessary for the operation
 
 ## Model Download
 
-This image requires downloading certain models from Hugging Face on first startup.
+This image allows downloading models from Hugging Face according to your needs.
 
 To download models with authentication (recommended):
 1. Create an account on [Hugging Face](https://huggingface.co/)
@@ -92,19 +76,15 @@ To download models with authentication (recommended):
    - Name: `HF_TOKEN`
    - Value: your HuggingFace token
 
-If you don't provide a token, the image will attempt an anonymous download, but this may fail depending on the access restrictions of the models.
+If you don't provide a token, you can still download public models via ComfyUI-Manager.
 
 ## Included Scripts
-
-### download_models.sh
-Automated script to download necessary models from Hugging Face. It checks if models already exist before downloading to avoid duplication.
 
 ### pre_start.sh
 This script runs at container startup to initialize ComfyUI:
 - Copies ComfyUI files from the Docker image to the volume
 - Creates directories for models
 - Installs extensions from the Docker image
-- Downloads missing models
 - Configures extra_model_paths.yml
 - Starts the ComfyUI service
 
@@ -127,29 +107,17 @@ Configuration of the Nginx web server that serves as the interface for accessing
 ## Included Extensions
 
 - **ComfyUI-Manager**: Management interface for installing other extensions and models
-- **sdxl_prompt_styler**: Easily style prompts for SDXL
-- **ComfyUI_TensorRT**: Improves performance by using TensorRT to optimize calculations
+- **ComfyUI-Crystools**: Advanced utility tools  
+- **ComfyUI-KJNodes**: Extended nodes from Kijai
 
-## Pre-loaded Models
+## Models
 
-The following models are automatically downloaded on first startup and placed in the corresponding directories:
-
-- **t5xxl_fp16.safetensors** (Text Encoder)  
-  Path: `/workspace/ComfyUI/models/text_encoders/`
-
-- **clip_l.safetensors** (CLIP Text Encoder)  
-  Path: `/workspace/ComfyUI/models/text_encoders/`
-
-- **ae.safetensors** (VAE)  
-  Path: `/workspace/ComfyUI/models/vae/`
-
-- **flux1-dev.safetensors** (Diffusion Model)  
-  Path: `/workspace/ComfyUI/models/diffusion_models/`
+You can download the models of your choice via ComfyUI-Manager once the container is started.
+Models will be automatically placed in the corresponding directories defined in `extra_model_paths.yml`.
 
 ## Customization
 
 You can customize this configuration by modifying the following files:
 
-- **download_models.sh** to download other default models
 - **extra_model_paths.yml** to add additional model paths
 - **pre_start.sh** to add additional extensions or configurations

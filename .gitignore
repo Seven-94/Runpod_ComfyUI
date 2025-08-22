@@ -27,11 +27,22 @@ ENV/
 *.pth
 *.pt
 *.bin
-.github/copilot.instructions.md
 
-# Docker
+# GitHub Copilot
+.github/copilot.instructions.md
+config/.github/copilot.instructions.md
+
+# Docker & Build
 .docker/
 docker-compose.override.yml
+*.dockerignore.backup
+build.log
+docker-build.log
+
+# Test outputs
+test-*.log
+test-output/
+check-*.log
 
 # Système d'exploitation
 .DS_Store
@@ -58,15 +69,29 @@ Thumbs.db
 *.log
 *.sqlite
 *.db
+comfyui.log
+nginx.log
+jupyter.log
 
-# IDE
+# IDE et éditeurs
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
+.vim/
+.emacs.d/
 
-# Configurations personnelles
+# Configurations personnelles et secrets
 credentials.json
 secrets.json
 auth.json
+.env.local
+.env.production
+config.local.*
+**/secrets/
+
+# Backup files
+*.backup
+*.bak
+*.orig
