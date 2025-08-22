@@ -53,11 +53,27 @@ docker push votre-username/runpod_comfyui:latest
 
 ## Modèles inclus
 
-Les modèles suivants sont téléchargés automatiquement depuis Hugging Face :
+### 🎨 Modèles FLUX (Génération d'images)
 - **T5XXL (FP16)** - Encodeur de texte pour la génération d'embeddings textuels
 - **CLIP-L** - Encodeur de texte CLIP Large pour la compréhension texte-image
 - **FLUX VAE** - Autoencodeur variationnel pour la conversion latent/image
 - **FLUX1-dev** - Modèle de diffusion FLUX1 (version développeur)
+- **FLUX1-Fill-dev** - Modèle FLUX pour le remplissage d'images (inpainting)
+- **FLUX1-Depth-dev** - Modèle FLUX guidé par la profondeur
+- **FLUX1-Canny-dev** - Modèle FLUX guidé par les contours Canny
+- **FLUX1-Redux-dev** - Modèle FLUX pour la stylisation avancée
+
+### ✨ NOUVEAUX MODÈLES (Mise à jour 2025)
+- **🖼️ FLUX.1-Kontext-dev** - Édition d'images contextuelle avec cohérence de personnage
+- **📹 Wan 2.2 T2V A14B** - Génération vidéo Text-to-Video avec architecture MoE
+- **📹 Wan 2.2 I2V A14B** - Génération vidéo Image-to-Video avec architecture MoE  
+- **🌏 Qwen-Image** - Génération d'images multilingue (chinois/anglais)
+- **🌏 Qwen-Image-Edit** - Édition d'images multilingue avec texte précis
+
+### 🔍 Modèles de support
+- **Sigclip Vision** - Modèle de vision pour ComfyUI
+
+> **📚 Documentation détaillée:** Consultez [NOUVEAUX_MODELES.md](docs/NOUVEAUX_MODELES.md) pour une description complète des nouveaux modèles et de leurs fonctionnalités.
 
 ## Organisation des répertoires
 
@@ -73,13 +89,16 @@ Les modèles suivants sont téléchargés automatiquement depuis Hugging Face :
 │   ├── clip/                    # Modèles CLIP
 │   ├── clip_vision/             # Modèles CLIP Vision
 │   ├── controlnet/              # Modèles ControlNet
-│   ├── diffusion_models/        # Modèles de diffusion (comme Flux)
+│   ├── diffusion_models/        # Modèles de diffusion (FLUX, Qwen)
 │   ├── embeddings/              # Embeddings textuels
 │   ├── loras/                   # LoRA models
 │   ├── text_encoders/           # Encodeurs de texte
+│   ├── text_to_video/           # Modèles Text-to-Video (Wan 2.2)
+│   ├── image_to_video/          # Modèles Image-to-Video (Wan 2.2)
+│   ├── style_models/            # Modèles de style (Redux)
 │   ├── upscale_models/          # Modèles d'upscaling
-│   └── vae/                     # Modèles VAE
-└── output/                      # Images générées
+│   └── vae/                     # Modèles VAE (FLUX, Wan, Qwen)
+└── output/                      # Images et vidéos générées
 ```
 
 ## Optimisations pour RTX 5090

@@ -82,7 +82,7 @@ download_if_not_exists \
     "/workspace/ComfyUI/models/diffusion_models/flux1-depth-dev.safetensors" \
     "FLUX.1-Depth-dev Modèle"
 
-# Modèle Fill Flux.1-dev
+# Modèle Canny Flux.1-dev
 download_if_not_exists \
     "https://huggingface.co/black-forest-labs/FLUX.1-Canny-dev/resolve/main/flux1-canny-dev.safetensors" \
     "/workspace/ComfyUI/models/diffusion_models/flux1-canny-dev.safetensors" \
@@ -99,6 +99,72 @@ download_if_not_exists \
     "https://huggingface.co/Comfy-Org/sigclip_vision_384/resolve/main/sigclip_vision_patch14_384.safetensors" \
     "/workspace/ComfyUI/models/clip_vision/sigclip_vision_patch14_384.safetensors" \
     "Sigclip Vision Comfyui"
+
+echo "🔍 Téléchargement des nouveaux modèles..."
+
+# FLUX.1-Kontext-dev - Modèle d'édition d'images contextuelle
+download_if_not_exists \
+    "https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/resolve/main/flux1-kontext-dev.safetensors" \
+    "/workspace/ComfyUI/models/diffusion_models/flux1-kontext-dev.safetensors" \
+    "FLUX.1-Kontext-dev Modèle"
+
+# VAE pour FLUX.1-Kontext-dev
+download_if_not_exists \
+    "https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/resolve/main/ae.safetensors" \
+    "/workspace/ComfyUI/models/vae/flux_kontext_ae.safetensors" \
+    "FLUX.1-Kontext VAE"
+
+# Wan 2.2 T2V A14B - Modèle Text-to-Video
+echo "📹 Téléchargement des modèles Wan 2.2 (très volumineux)..."
+download_if_not_exists \
+    "https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B/resolve/main/dit/diffusion_pytorch_model.safetensors" \
+    "/workspace/ComfyUI/models/text_to_video/wan2.2_t2v_a14b_dit.safetensors" \
+    "Wan 2.2 T2V A14B DiT"
+
+download_if_not_exists \
+    "https://huggingface.co/Wan-AI/Wan2.2-T2V-A14B/resolve/main/vae/diffusion_pytorch_model.safetensors" \
+    "/workspace/ComfyUI/models/vae/wan2.2_t2v_vae.safetensors" \
+    "Wan 2.2 T2V VAE"
+
+# Wan 2.2 I2V A14B - Modèle Image-to-Video
+download_if_not_exists \
+    "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B/resolve/main/dit/diffusion_pytorch_model.safetensors" \
+    "/workspace/ComfyUI/models/image_to_video/wan2.2_i2v_a14b_dit.safetensors" \
+    "Wan 2.2 I2V A14B DiT"
+
+download_if_not_exists \
+    "https://huggingface.co/Wan-AI/Wan2.2-I2V-A14B/resolve/main/vae/diffusion_pytorch_model.safetensors" \
+    "/workspace/ComfyUI/models/vae/wan2.2_i2v_vae.safetensors" \
+    "Wan 2.2 I2V VAE"
+
+# Qwen-Image - Modèle Text-to-Image multilingue
+echo "🖼️ Téléchargement des modèles Qwen Image..."
+download_if_not_exists \
+    "https://huggingface.co/Qwen/Qwen-Image/resolve/main/dit/diffusion_pytorch_model.safetensors" \
+    "/workspace/ComfyUI/models/diffusion_models/qwen_image_dit.safetensors" \
+    "Qwen-Image DiT"
+
+download_if_not_exists \
+    "https://huggingface.co/Qwen/Qwen-Image/resolve/main/vae/diffusion_pytorch_model.safetensors" \
+    "/workspace/ComfyUI/models/vae/qwen_image_vae.safetensors" \
+    "Qwen-Image VAE"
+
+# Qwen-Image-Edit - Modèle d'édition d'images multilingue
+download_if_not_exists \
+    "https://huggingface.co/Qwen/Qwen-Image-Edit/resolve/main/dit/diffusion_pytorch_model.safetensors" \
+    "/workspace/ComfyUI/models/diffusion_models/qwen_image_edit_dit.safetensors" \
+    "Qwen-Image-Edit DiT"
+
+download_if_not_exists \
+    "https://huggingface.co/Qwen/Qwen-Image-Edit/resolve/main/vae/diffusion_pytorch_model.safetensors" \
+    "/workspace/ComfyUI/models/vae/qwen_image_edit_vae.safetensors" \
+    "Qwen-Image-Edit VAE"
+
+# Encodeurs de texte pour Qwen models
+download_if_not_exists \
+    "https://huggingface.co/Qwen/Qwen-Image/resolve/main/text_encoder/model.safetensors" \
+    "/workspace/ComfyUI/models/text_encoders/qwen_text_encoder.safetensors" \
+    "Qwen Text Encoder"
 
 echo "==== Vérification des permissions des fichiers ===="
 # S'assurer que tous les fichiers téléchargés sont accessibles

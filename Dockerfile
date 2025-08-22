@@ -58,8 +58,11 @@ COPY config/download_models.sh /opt/comfyui_templates/download_models.sh
 COPY config/start.sh /start.sh
 COPY config/pre_start.sh /pre_start.sh
 
+# Copie des scripts utilitaires
+COPY scripts/ /opt/scripts/
+
 # Permissions d'exécution
-RUN chmod +x /opt/comfyui_templates/download_models.sh /pre_start.sh /start.sh
+RUN chmod +x /opt/comfyui_templates/download_models.sh /pre_start.sh /start.sh /opt/scripts/*.sh
 
 # Exposition des ports
 EXPOSE 3000 8188 8888 22

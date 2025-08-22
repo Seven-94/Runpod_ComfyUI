@@ -12,3 +12,6 @@ runpod_comfyui:
   unet: models/unet/
   text_encoders: models/text_encoders/
   diffusion_models: models/diffusion_models/
+  text_to_video: models/text_to_video/
+  image_to_video: models/image_to_video/
+  style_models: models/style_models/
