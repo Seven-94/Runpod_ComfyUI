@@ -27,6 +27,7 @@ ENV/
 *.pth
 *.pt
 *.bin
+.github/copilot.instructions.md
 
 # Docker
 .docker/
