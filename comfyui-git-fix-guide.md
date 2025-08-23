@@ -28,7 +28,18 @@ Le script `fix-comfyui-git.sh` permet de corriger le problème sur une installat
 
 1. **Se connecter en SSH au pod RunPod**
 
-2. **Télécharger et exécuter le script de correction :**
+2. **Diagnostiquer le problème :**
+```bash
+/opt/scripts/diagnose-comfyui-git.sh
+```
+
+3. **Corriger automatiquement :**
+```bash
+cd /workspace
+/opt/scripts/fix-comfyui-git.sh
+```
+
+Ou télécharger depuis GitHub si le script n'est pas disponible :
 ```bash
 cd /workspace
 wget https://raw.githubusercontent.com/Seven-94/Runpod_ComfyUI/main/fix-comfyui-git.sh

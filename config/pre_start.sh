@@ -28,13 +28,35 @@ if [ ! -f "/workspace/ComfyUI/main.py" ]; then
     # Réinitialiser le repository Git avec l'historique complet
     git init
     git remote add origin https://github.com/comfyanonymous/ComfyUI.git
+    echo "Récupération de l'historique Git complet..."
     git fetch origin
-    git checkout -b master origin/master
+    
+    # Configurer la branche master
+    if git checkout -b master origin/master; then
+        echo "✅ Branche master configurée"
+    elif git checkout master; then
+        echo "✅ Branche master déjà existante"
+    else
+        # Créer la branche master manuellement
+        git branch master origin/master
+        git checkout master
+        echo "✅ Branche master créée manuellement"
+    fi
+    
+    # S'assurer que master suit origin/master
+    git branch --set-upstream-to=origin/master master
     
     # Revenir au tag v0.3.51 tout en gardant la branche master accessible
-    git checkout v0.3.51
-    git checkout -b current-version
-    git checkout master
+    git fetch --tags
+    if git show-ref --verify --quiet refs/tags/v0.3.51; then
+        echo "Tag v0.3.51 trouvé, création d'une branche de travail..."
+        git checkout v0.3.51
+        git checkout -b current-version
+        git checkout master
+        echo "Configuration Git terminée - prêt pour les mises à jour via ComfyUI-Manager"
+    else
+        echo "⚠️ Tag v0.3.51 non trouvé, resté sur master"
+    fi
     
     echo "ComfyUI v0.3.51 installé avec succès (repository Git configuré pour les mises à jour)"
 else
@@ -47,9 +69,36 @@ else
         rm -rf .git
         git init
         git remote add origin https://github.com/comfyanonymous/ComfyUI.git
+        echo "Récupération de l'historique Git complet..."
         git fetch origin
-        git checkout -b master origin/master
-        echo "Repository Git reconfiguré"
+        
+        # Configurer la branche master
+        if git checkout -b master origin/master; then
+            echo "✅ Branche master configurée"
+        elif git checkout master; then
+            echo "✅ Branche master déjà existante"
+        else
+            git branch master origin/master
+            git checkout master
+            echo "✅ Branche master créée manuellement"
+        fi
+        
+        # S'assurer que master suit origin/master
+        git branch --set-upstream-to=origin/master master
+        echo "Repository Git reconfiguré - prêt pour les mises à jour"
+    else
+        echo "Vérification de la configuration Git existante..."
+        # Vérifier que la branche master existe et est correctement configurée
+        if ! git show-ref --verify --quiet refs/heads/master; then
+            echo "Branche master manquante, reconfiguration..."
+            git fetch origin
+            git checkout -b master origin/master
+            git branch --set-upstream-to=origin/master master
+        elif ! git rev-parse --abbrev-ref master@{upstream} >/dev/null 2>&1; then
+            echo "Configuration upstream manquante pour master..."
+            git branch --set-upstream-to=origin/master master
+        fi
+        echo "Configuration Git vérifiée"
     fi
 fi
 

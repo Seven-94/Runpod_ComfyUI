@@ -58,10 +58,22 @@ fi
 echo "Configuration de la branche master..."
 if git checkout -b master origin/master; then
     echo "✅ Branche master configurée"
+elif git checkout master; then
+    echo "✅ Branche master déjà existante, activation"
 else
     echo "❌ Échec de la configuration de la branche master"
-    exit 1
+    # Essayer de créer la branche master manuellement
+    if git branch master origin/master && git checkout master; then
+        echo "✅ Branche master créée manuellement"
+    else
+        echo "❌ Impossible de configurer la branche master"
+        exit 1
+    fi
 fi
+
+# S'assurer que la branche master suit origin/master
+echo "Configuration du tracking de la branche master..."
+git branch --set-upstream-to=origin/master master
 
 # Vérification finale
 echo ""

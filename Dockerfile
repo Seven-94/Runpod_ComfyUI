@@ -79,9 +79,11 @@ COPY config/pre_start.sh /pre_start.sh
 # Copie des scripts utilitaires
 COPY scripts/check_attention_modules.py /opt/scripts/check_attention_modules.py
 COPY scripts/check_blackwell_optimizations.py /opt/scripts/check_blackwell_optimizations.py
+COPY fix-comfyui-git.sh /opt/scripts/fix-comfyui-git.sh
+COPY diagnose-comfyui-git.sh /opt/scripts/diagnose-comfyui-git.sh
 
 # Permissions d'exécution
-RUN chmod +x /pre_start.sh /start.sh /opt/scripts/*.py
+RUN chmod +x /pre_start.sh /start.sh /opt/scripts/*.py /opt/scripts/fix-comfyui-git.sh /opt/scripts/diagnose-comfyui-git.sh
 
 # Exposition des ports
 # 3000: nginx (interface ComfyUI)
