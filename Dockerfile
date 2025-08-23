@@ -68,9 +68,8 @@ RUN mkdir -p /opt/comfyui_extensions && \
 # Création des répertoires de base
 RUN mkdir -p /opt/comfyui_templates /usr/share/nginx/html
 
-# Copie des fichiers de configuration (sans download_models.sh)
+# Copie des fichiers de configuration
 COPY config/nginx.conf /opt/comfyui_templates/nginx.conf
-COPY config/readme.html /opt/comfyui_templates/readme.html
 COPY config/README.md /usr/share/nginx/html/README.md
 COPY config/extra_model_paths.yml /opt/comfyui_templates/extra_model_paths.yml
 COPY config/start.sh /start.sh
@@ -79,11 +78,9 @@ COPY config/pre_start.sh /pre_start.sh
 # Copie des scripts utilitaires
 COPY scripts/check_attention_modules.py /opt/scripts/check_attention_modules.py
 COPY scripts/check_blackwell_optimizations.py /opt/scripts/check_blackwell_optimizations.py
-COPY fix-comfyui-git.sh /opt/scripts/fix-comfyui-git.sh
-COPY diagnose-comfyui-git.sh /opt/scripts/diagnose-comfyui-git.sh
 
 # Permissions d'exécution
-RUN chmod +x /pre_start.sh /start.sh /opt/scripts/*.py /opt/scripts/fix-comfyui-git.sh /opt/scripts/diagnose-comfyui-git.sh
+RUN chmod +x /pre_start.sh /start.sh /opt/scripts/*.py
 
 # Exposition des ports
 # 3000: nginx (interface ComfyUI)

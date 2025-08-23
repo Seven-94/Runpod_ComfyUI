@@ -9,7 +9,7 @@ echo "================================================"
 
 # Variables
 VERSION="0.1.0"
-IMAGE_NAME="runpod_comfyui"
+IMAGE_NAME="runpod-comfyui"
 REGISTRY="${DOCKER_REGISTRY:-}" # Optionnel, peut être défini par l'utilisateur
 COMFYUI_VERSION="${COMFYUI_VERSION:-$(curl -s https://api.github.com/repos/comfyanonymous/ComfyUI/releases/latest | jq -r .tag_name)}"
 
@@ -57,6 +57,7 @@ build_image() {
     
     # Arguments de build pour optimisation
     DOCKER_BUILDKIT=1 docker build \
+        --platform linux/amd64 \
         --progress=plain \
         --build-arg BUILDKIT_INLINE_CACHE=1 \
         --build-arg COMFYUI_VERSION="${COMFYUI_VERSION}" \
@@ -79,29 +80,48 @@ show_image_info() {
     docker images "${IMAGE_NAME}" --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
 }
 
+# # Test de l'image (optionnel)
+# test_image() {
+#     if [ "$1" = "--test" ]; then
+#         log "Test de l'image..."
+        
+#         # Test simple : vérifier que l'image démarre
+#         docker run --rm \
+#             --gpus all \
+#             --name test_comfyui \
+#             "${IMAGE_NAME}:${VERSION}" \
+#             python --version
+            
+#         if [ $? -eq 0 ]; then
+#             log "✅ Test réussi"
+#         else
+#             warn "⚠️ Test échoué - l'image peut tout de même fonctionner"
+#         fi
+#     fi
+# }
+
 # Test de l'image (optionnel)
 test_image() {
-    if [ "$1" = "--test" ]; then
-        log "Test de l'image..."
-        
-        # Test simple : vérifier que l'image démarre
-        docker run --rm \
-            --gpus all \
-            --name test_comfyui \
-            "${IMAGE_NAME}:${VERSION}" \
-            python --version
-            
-        if [ $? -eq 0 ]; then
-            log "✅ Test réussi"
-        else
-            warn "⚠️ Test échoué - l'image peut tout de même fonctionner"
+    for arg in "$@"; do
+        if [ "$arg" = "--test" ]; then
+            warn "Test ignoré sur Mac - l'image sera testée sur RunPod"
+            log "✅ Construction OK, prête pour déploiement RunPod"
+            break
         fi
-    fi
+    done
 }
 
 # Publication sur registry (optionnel)
 push_image() {
-    if [ "$1" = "--push" ] && [ -n "$REGISTRY" ]; then
+    local should_push=false
+    for arg in "$@"; do
+        if [ "$arg" = "--push" ]; then
+            should_push=true
+            break
+        fi
+    done
+    
+    if [ "$should_push" = true ] && [ -n "$REGISTRY" ]; then
         log "Publication vers le registry ${REGISTRY}..."
         
         # Tag pour le registry
@@ -113,18 +133,21 @@ push_image() {
         docker push "${REGISTRY}/${IMAGE_NAME}:latest"
         
         log "✅ Image publiée sur ${REGISTRY}"
-    elif [ "$1" = "--push" ]; then
+    elif [ "$should_push" = true ]; then
         warn "Variable DOCKER_REGISTRY non définie, publication ignorée"
     fi
 }
 
 # Nettoyage des images temporaires
 cleanup() {
-    if [ "$1" = "--cleanup" ]; then
-        log "Nettoyage des images temporaires..."
-        docker image prune -f
-        log "✅ Nettoyage terminé"
-    fi
+    for arg in "$@"; do
+        if [ "$arg" = "--cleanup" ]; then
+            log "Nettoyage des images temporaires..."
+            docker image prune -f
+            log "✅ Nettoyage terminé"
+            break
+        fi
+    done
 }
 
 # Programme principal
@@ -141,9 +164,9 @@ main() {
     check_prerequisites
     build_image
     show_image_info
-    test_image "$1"
-    push_image "$1"
-    cleanup "$1"
+    test_image "$@"
+    push_image "$@"
+    cleanup "$@"
     
     echo ""
     log "🎉 Construction terminée!"
