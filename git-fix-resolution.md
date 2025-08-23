@@ -25,12 +25,13 @@ Le problème venait de l'utilisation incorrecte de la commande `git fetch origin
    - `test-comfyui-git-setup.sh` pour valider la procédure
    - Test en environnement isolé
 
-## 🧪 **Test de validation**
+## 🧪 **Test de validation (local uniquement)**
 ```bash
-/opt/scripts/test-comfyui-git-setup.sh
+# En local, pour tester la procédure avant le déploiement
+./test-comfyui-git-setup.sh
 ```
 
-Ce script teste la procédure complète dans un répertoire temporaire pour s'assurer que la configuration Git fonctionne correctement.
+Ce script teste la procédure complète dans un répertoire temporaire pour s'assurer que la configuration Git fonctionne correctement. **Note : Ce script est disponible uniquement pour les tests locaux et n'est pas inclus dans l'image Docker finale.**
 
 ## 🚀 **Instructions pour une installation existante**
 
@@ -44,10 +45,7 @@ Si vous rencontrez encore cette erreur sur une installation existante :
 cd /workspace
 /opt/scripts/fix-comfyui-git.sh
 
-# 3. Test de validation
-/opt/scripts/test-comfyui-git-setup.sh
-
-# 4. Redémarrage de ComfyUI
+# 3. Redémarrage de ComfyUI
 pkill -f "python.*main.py"
 cd /workspace/ComfyUI
 python main.py --listen --port 8188 --extra-model-paths-config extra_model_paths.yml --force-fp16 --use-split-cross-attention --enable-cors-header &

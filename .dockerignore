@@ -17,8 +17,10 @@ build.sh
 # GitHub Copilot
 .github/copilot.instructions.md
 config/.github/copilot.instructions.md
-# Scripts de test et debugging
-test-*.sh
+# Scripts de test et debugging (sauf les scripts utilitaires)
+test-version-check.sh
+test-packages.sh
+test-comfyui-git-setup.sh
 check-*.py
 debug-*
 
