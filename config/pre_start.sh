@@ -29,18 +29,34 @@ if [ ! -f "/workspace/ComfyUI/main.py" ]; then
     git init
     git remote add origin https://github.com/comfyanonymous/ComfyUI.git
     echo "Récupération de l'historique Git complet..."
-    git fetch origin
+    if git fetch --all --tags; then
+        echo "✅ Fetch réussi"
+    else
+        echo "❌ Échec du fetch Git"
+        exit 1
+    fi
+    
+    # Vérifier que origin/master existe
+    if git show-ref --verify --quiet refs/remotes/origin/master; then
+        echo "✅ origin/master trouvé"
+    else
+        echo "❌ origin/master non trouvé, arrêt"
+        git branch -r
+        exit 1
+    fi
     
     # Configurer la branche master
-    if git checkout -b master origin/master; then
-        echo "✅ Branche master configurée"
-    elif git checkout master; then
-        echo "✅ Branche master déjà existante"
-    else
-        # Créer la branche master manuellement
-        git branch master origin/master
+    if git show-ref --verify --quiet refs/heads/master; then
+        echo "Branche master locale existe déjà"
         git checkout master
-        echo "✅ Branche master créée manuellement"
+    else
+        echo "Création de la branche master..."
+        if git checkout -b master origin/master; then
+            echo "✅ Branche master configurée"
+        else
+            echo "❌ Échec de la création de la branche master"
+            exit 1
+        fi
     fi
     
     # S'assurer que master suit origin/master
@@ -70,17 +86,34 @@ else
         git init
         git remote add origin https://github.com/comfyanonymous/ComfyUI.git
         echo "Récupération de l'historique Git complet..."
-        git fetch origin
+        if git fetch --all --tags; then
+            echo "✅ Fetch réussi"
+        else
+            echo "❌ Échec du fetch Git"
+            exit 1
+        fi
+        
+        # Vérifier que origin/master existe
+        if git show-ref --verify --quiet refs/remotes/origin/master; then
+            echo "✅ origin/master trouvé"
+        else
+            echo "❌ origin/master non trouvé"
+            git branch -r
+            exit 1
+        fi
         
         # Configurer la branche master
-        if git checkout -b master origin/master; then
-            echo "✅ Branche master configurée"
-        elif git checkout master; then
-            echo "✅ Branche master déjà existante"
-        else
-            git branch master origin/master
+        if git show-ref --verify --quiet refs/heads/master; then
+            echo "Branche master locale existe déjà"
             git checkout master
-            echo "✅ Branche master créée manuellement"
+        else
+            echo "Création de la branche master..."
+            if git checkout -b master origin/master; then
+                echo "✅ Branche master configurée"
+            else
+                echo "❌ Échec de la création de la branche master"
+                exit 1
+            fi
         fi
         
         # S'assurer que master suit origin/master
@@ -91,11 +124,21 @@ else
         # Vérifier que la branche master existe et est correctement configurée
         if ! git show-ref --verify --quiet refs/heads/master; then
             echo "Branche master manquante, reconfiguration..."
-            git fetch origin
-            git checkout -b master origin/master
-            git branch --set-upstream-to=origin/master master
+            if git fetch --all; then
+                if git show-ref --verify --quiet refs/remotes/origin/master; then
+                    git checkout -b master origin/master
+                    git branch --set-upstream-to=origin/master master
+                else
+                    echo "❌ origin/master non trouvé"
+                    exit 1
+                fi
+            else
+                echo "❌ Échec du fetch"
+                exit 1
+            fi
         elif ! git rev-parse --abbrev-ref master@{upstream} >/dev/null 2>&1; then
             echo "Configuration upstream manquante pour master..."
+            git fetch origin
             git branch --set-upstream-to=origin/master master
         fi
         echo "Configuration Git vérifiée"

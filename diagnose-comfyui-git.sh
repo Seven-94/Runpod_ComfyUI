@@ -62,6 +62,13 @@ if [ -d ".git" ]; then
     echo "Test de connectivité GitHub:"
     if git ls-remote --exit-code origin HEAD >/dev/null 2>&1; then
         echo "✅ Connexion GitHub OK"
+        
+        # Vérifier si origin/master est disponible
+        if git ls-remote --exit-code origin master >/dev/null 2>&1; then
+            echo "✅ Branche master accessible sur GitHub"
+        else
+            echo "❌ Branche master non accessible sur GitHub"
+        fi
     else
         echo "❌ Problème de connexion GitHub"
     fi

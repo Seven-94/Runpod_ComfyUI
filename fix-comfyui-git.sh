@@ -45,35 +45,51 @@ git init
 echo "Configuration du remote origin..."
 git remote add origin https://github.com/comfyanonymous/ComfyUI.git
 
-# Fetch toutes les branches
+# Fetch toutes les branches et tags
 echo "Récupération des branches distantes..."
-if git fetch origin; then
+if git fetch --all --tags; then
     echo "✅ Fetch réussi"
+    echo "Branches distantes disponibles:"
+    git branch -r
 else
     echo "❌ Échec du fetch"
     exit 1
 fi
 
+# Vérifier que origin/master existe
+echo "Vérification de l'existence d'origin/master..."
+if git show-ref --verify --quiet refs/remotes/origin/master; then
+    echo "✅ origin/master trouvé"
+else
+    echo "❌ origin/master non trouvé"
+    echo "Branches distantes disponibles:"
+    git branch -r
+    exit 1
+fi
+
 # Checkout de la branche master
 echo "Configuration de la branche master..."
-if git checkout -b master origin/master; then
-    echo "✅ Branche master configurée"
-elif git checkout master; then
-    echo "✅ Branche master déjà existante, activation"
+if git show-ref --verify --quiet refs/heads/master; then
+    echo "Branche master locale existe déjà"
+    git checkout master
+    echo "✅ Basculé sur la branche master existante"
 else
-    echo "❌ Échec de la configuration de la branche master"
-    # Essayer de créer la branche master manuellement
-    if git branch master origin/master && git checkout master; then
-        echo "✅ Branche master créée manuellement"
+    echo "Création de la branche master..."
+    if git checkout -b master origin/master; then
+        echo "✅ Branche master créée et configurée"
     else
-        echo "❌ Impossible de configurer la branche master"
+        echo "❌ Échec de la création de la branche master"
         exit 1
     fi
 fi
 
 # S'assurer que la branche master suit origin/master
 echo "Configuration du tracking de la branche master..."
-git branch --set-upstream-to=origin/master master
+if git branch --set-upstream-to=origin/master master; then
+    echo "✅ Tracking configuré"
+else
+    echo "⚠️ Échec de la configuration du tracking"
+fi
 
 # Vérification finale
 echo ""
