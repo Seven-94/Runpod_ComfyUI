@@ -106,6 +106,8 @@ CLEANUP-SUMMARY.md
 
 # Template RunPod (usage interne uniquement)
 RUNPOD-TEMPLATE-README.md
+# Script perso
+dl_models.sh
 
 # Backup files
 *.backup

@@ -24,7 +24,7 @@ ARG COMFYUI_VERSION=v0.3.51
 RUN apt-get update --fix-missing && \
     apt-get install -y --no-install-recommends \
     ffmpeg libsm6 libxext6 libglib2.0-0 libgl1 \
-    nginx openssh-server git && \
+    nginx openssh-server git wget curl && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
