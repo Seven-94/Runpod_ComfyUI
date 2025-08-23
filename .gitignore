@@ -91,6 +91,19 @@ auth.json
 config.local.*
 **/secrets/
 
+# PROTECTION CRITIQUE - Fichiers de sécurité et rapports
+*SECURITY*
+*security*
+*SECRET*
+*secret*
+*REPORT*
+*report*
+*AUDIT*
+*audit*
+*SENSITIVE*
+*sensitive*
+CLEANUP-SUMMARY.md
+
 # Backup files
 *.backup
 *.bak
