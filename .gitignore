@@ -104,6 +104,9 @@ config.local.*
 *sensitive*
 CLEANUP-SUMMARY.md
 
+# Template RunPod (usage interne uniquement)
+RUNPOD-TEMPLATE-README.md
+
 # Backup files
 *.backup
 *.bak
