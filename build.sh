@@ -81,35 +81,35 @@ show_image_info() {
 }
 
 # # Test de l'image (optionnel)
-# test_image() {
-#     if [ "$1" = "--test" ]; then
-#         log "Test de l'image..."
-        
-#         # Test simple : vérifier que l'image démarre
-#         docker run --rm \
-#             --gpus all \
-#             --name test_comfyui \
-#             "${IMAGE_NAME}:${VERSION}" \
-#             python --version
-            
-#         if [ $? -eq 0 ]; then
-#             log "✅ Test réussi"
-#         else
-#             warn "⚠️ Test échoué - l'image peut tout de même fonctionner"
-#         fi
-#     fi
-# }
-
-# Test de l'image (optionnel)
 test_image() {
-    for arg in "$@"; do
-        if [ "$arg" = "--test" ]; then
-            warn "Test ignoré sur Mac - l'image sera testée sur RunPod"
-            log "✅ Construction OK, prête pour déploiement RunPod"
-            break
+    if [ "$1" = "--test" ]; then
+        log "Test de l'image..."
+        
+        # Test simple : vérifier que l'image démarre
+        docker run --rm \
+            --gpus all \
+            --name test_comfyui \
+            "${IMAGE_NAME}:${VERSION}" \
+            python --version
+            
+        if [ $? -eq 0 ]; then
+            log "✅ Test réussi"
+        else
+            warn "⚠️ Test échoué - l'image peut tout de même fonctionner"
         fi
-    done
+    fi
 }
+
+# Test de l'image macos (optionnel)
+# test_image() {
+#     for arg in "$@"; do
+#         if [ "$arg" = "--test" ]; then
+#             warn "Test ignoré sur Mac - l'image sera testée sur RunPod"
+#             log "✅ Construction OK, prête pour déploiement RunPod"
+#             break
+#         fi
+#     done
+# }
 
 # Publication sur registry (optionnel)
 push_image() {
