@@ -36,11 +36,10 @@ RUN mkdir -p /var/run/sshd && \
 # Installation des packages Python optimisés pour Blackwell
 RUN pip3 install --upgrade pip setuptools wheel && \
     pip3 install \
-        einops safetensors jupyterlab ipywidgets \
-        flash-attn --no-build-isolation \
-        torch-audio-addons \
-        triton \
-        xformers && \
+        einops safetensors jupyterlab ipywidgets && \
+    pip3 install flash-attn --no-build-isolation || echo "⚠️ flash-attn installation failed, continuing..." && \
+    pip3 install triton || echo "⚠️ triton installation failed, continuing..." && \
+    pip3 install xformers || echo "⚠️ xformers installation failed, continuing..." && \
     rm -rf /root/.cache/pip
 
 # Installation de ComfyUI avec version dynamique

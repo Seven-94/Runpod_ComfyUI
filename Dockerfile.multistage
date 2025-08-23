@@ -26,11 +26,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 RUN pip install --upgrade pip setuptools wheel && \
     pip install \
-        einops safetensors jupyterlab ipywidgets \
-        flash-attn --no-build-isolation \
-        torch-audio-addons \
-        triton \
-        xformers
+        einops safetensors jupyterlab ipywidgets && \
+    pip install flash-attn --no-build-isolation || echo "⚠️ flash-attn installation failed, continuing..." && \
+    pip install triton || echo "⚠️ triton installation failed, continuing..." && \
+    pip install xformers || echo "⚠️ xformers installation failed, continuing..."
 
 # Clonage de ComfyUI avec version dynamique
 WORKDIR /tmp
