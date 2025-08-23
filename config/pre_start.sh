@@ -18,9 +18,39 @@ if [ ! -f "/workspace/ComfyUI/main.py" ]; then
         echo "AVERTISSEMENT: Impossible de copier tous les fichiers cachés (normal)"
     fi
     
-    echo "ComfyUI v0.3.51 installé avec succès"
+    # Réinitialiser le repository Git pour permettre les mises à jour
+    echo "Configuration du repository Git pour les mises à jour..."
+    cd /workspace/ComfyUI
+    
+    # Supprimer l'ancien .git si présent (cloné avec --depth 1 --branch tag)
+    rm -rf .git
+    
+    # Réinitialiser le repository Git avec l'historique complet
+    git init
+    git remote add origin https://github.com/comfyanonymous/ComfyUI.git
+    git fetch origin
+    git checkout -b master origin/master
+    
+    # Revenir au tag v0.3.51 tout en gardant la branche master accessible
+    git checkout v0.3.51
+    git checkout -b current-version
+    git checkout master
+    
+    echo "ComfyUI v0.3.51 installé avec succès (repository Git configuré pour les mises à jour)"
 else
     echo "ComfyUI déjà présent dans le volume network"
+    
+    # Vérifier si le repository Git est correctement configuré
+    cd /workspace/ComfyUI
+    if [ ! -d ".git" ] || ! git remote get-url origin >/dev/null 2>&1; then
+        echo "Reconfiguration du repository Git pour les mises à jour..."
+        rm -rf .git
+        git init
+        git remote add origin https://github.com/comfyanonymous/ComfyUI.git
+        git fetch origin
+        git checkout -b master origin/master
+        echo "Repository Git reconfiguré"
+    fi
 fi
 
 # Étape 3: Création des répertoires pour les modèles s'ils n'existent pas
