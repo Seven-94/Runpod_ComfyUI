@@ -29,38 +29,23 @@ if [ ! -f "/workspace/ComfyUI/main.py" ]; then
     git init
     git remote add origin https://github.com/comfyanonymous/ComfyUI.git
     echo "Récupération de l'historique Git complet..."
-    if git fetch --all --tags; then
-        echo "✅ Fetch réussi"
+    if git fetch origin; then
+        echo "✅ Fetch initial réussi"
     else
         echo "❌ Échec du fetch Git"
         exit 1
     fi
     
-    # Vérifier que origin/master existe
-    if git show-ref --verify --quiet refs/remotes/origin/master; then
-        echo "✅ origin/master trouvé"
+    # Récupérer spécifiquement la branche master
+    echo "Configuration de la branche master..."
+    if git fetch origin master:master; then
+        echo "✅ Branche master récupérée"
+        git checkout master
+        git branch --set-upstream-to=origin/master master
     else
-        echo "❌ origin/master non trouvé, arrêt"
-        git branch -r
+        echo "❌ Impossible de récupérer la branche master"
         exit 1
     fi
-    
-    # Configurer la branche master
-    if git show-ref --verify --quiet refs/heads/master; then
-        echo "Branche master locale existe déjà"
-        git checkout master
-    else
-        echo "Création de la branche master..."
-        if git checkout -b master origin/master; then
-            echo "✅ Branche master configurée"
-        else
-            echo "❌ Échec de la création de la branche master"
-            exit 1
-        fi
-    fi
-    
-    # S'assurer que master suit origin/master
-    git branch --set-upstream-to=origin/master master
     
     # Revenir au tag v0.3.51 tout en gardant la branche master accessible
     git fetch --tags
@@ -81,39 +66,34 @@ else
     # Vérifier si le repository Git est correctement configuré
     cd /workspace/ComfyUI
     if [ ! -d ".git" ] || ! git remote get-url origin >/dev/null 2>&1; then
-        echo "Reconfiguration du repository Git pour les mises à jour..."
+        echo "Reconfiguration complète du repository Git pour les mises à jour..."
         rm -rf .git
         git init
         git remote add origin https://github.com/comfyanonymous/ComfyUI.git
-        echo "Récupération de l'historique Git complet..."
-        if git fetch --all --tags; then
-            echo "✅ Fetch réussi"
+        
+        echo "Récupération de toutes les branches et tags..."
+        if git fetch origin; then
+            echo "✅ Fetch initial réussi"
         else
-            echo "❌ Échec du fetch Git"
+            echo "❌ Échec du fetch Git initial"
             exit 1
         fi
         
-        # Vérifier que origin/master existe
-        if git show-ref --verify --quiet refs/remotes/origin/master; then
-            echo "✅ origin/master trouvé"
+        # Récupérer spécifiquement la branche master
+        echo "Récupération de la branche master..."
+        if git fetch origin master:master; then
+            echo "✅ Branche master récupérée"
         else
-            echo "❌ origin/master non trouvé"
-            git branch -r
+            echo "❌ Impossible de récupérer la branche master"
             exit 1
         fi
         
-        # Configurer la branche master
-        if git show-ref --verify --quiet refs/heads/master; then
-            echo "Branche master locale existe déjà"
-            git checkout master
+        # Basculer sur master
+        if git checkout master; then
+            echo "✅ Basculé sur master"
         else
-            echo "Création de la branche master..."
-            if git checkout -b master origin/master; then
-                echo "✅ Branche master configurée"
-            else
-                echo "❌ Échec de la création de la branche master"
-                exit 1
-            fi
+            echo "❌ Impossible de basculer sur master"
+            exit 1
         fi
         
         # S'assurer que master suit origin/master
@@ -121,19 +101,26 @@ else
         echo "Repository Git reconfiguré - prêt pour les mises à jour"
     else
         echo "Vérification de la configuration Git existante..."
-        # Vérifier que la branche master existe et est correctement configurée
+        
+        # Vérifier que la branche master existe localement
         if ! git show-ref --verify --quiet refs/heads/master; then
             echo "Branche master manquante, reconfiguration..."
-            if git fetch --all; then
-                if git show-ref --verify --quiet refs/remotes/origin/master; then
-                    git checkout -b master origin/master
-                    git branch --set-upstream-to=origin/master master
-                else
-                    echo "❌ origin/master non trouvé"
-                    exit 1
-                fi
+            
+            # Nettoyer et recommencer proprement
+            echo "Nettoyage et reconfiguration complète..."
+            cd /workspace
+            rm -rf ComfyUI/.git
+            cd ComfyUI
+            git init
+            git remote add origin https://github.com/comfyanonymous/ComfyUI.git
+            
+            echo "Récupération de la branche master..."
+            if git fetch origin master:master; then
+                echo "✅ Branche master récupérée"
+                git checkout master
+                git branch --set-upstream-to=origin/master master
             else
-                echo "❌ Échec du fetch"
+                echo "❌ Impossible de récupérer master"
                 exit 1
             fi
         elif ! git rev-parse --abbrev-ref master@{upstream} >/dev/null 2>&1; then

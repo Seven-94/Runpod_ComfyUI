@@ -1,29 +1,28 @@
-# 🔧 Résolution du problème "fatal: 'origin/master' is not a commit"
+# 🔧 Résolution DÉFINITIVE du problème Git ComfyUI
 
-## ❌ **Problème identifié et résolu**
-```
-fatal: 'origin/master' is not a commit and a branch 'master' cannot be created from it
-ERREUR: Le script de pré-démarrage a échoué
-```
+## ❌ **Problèmes résolus :**
+1. `fatal: 'origin/master' is not a commit and a branch 'master' cannot be created from it`
+2. `❌ origin/master non trouvé`
+3. `[ComfyUI-Manager] Failed to checkout 'master' branch`
 
-## ✅ **Cause et solution**
-Le problème venait de l'utilisation incorrecte de la commande `git fetch origin --all --tags`. La commande correcte est `git fetch --all --tags`.
+## ✅ **Solution finale robuste :**
 
-### **Corrections apportées :**
+### **Approche adoptée :**
+- `git fetch origin` pour le fetch initial 
+- `git fetch origin master:master` pour récupérer spécifiquement master
+- Gestion des conflits avec `git checkout -f master`
+- Configuration du tracking avec `git branch --set-upstream-to=origin/master master`
 
-1. **Dans `fix-comfyui-git.sh`** :
-   - Correction de `git fetch origin --all --tags` → `git fetch --all --tags`
-   - Ajout de vérifications pour s'assurer qu'`origin/master` existe
-   - Gestion améliorée des cas où la branche `master` existe déjà
+### **Scripts corrigés et testés :**
+1. ✅ `fix-comfyui-git.sh` - Script de correction manuelle
+2. ✅ `config/pre_start.sh` - Correction automatique au démarrage
+3. ✅ `diagnose-comfyui-git.sh` - Diagnostic des problèmes
 
-2. **Dans `pre_start.sh`** :
-   - Même correction de la commande fetch
-   - Vérifications renforcées avant création de la branche master
-   - Gestion d'erreur améliorée
-
-3. **Nouveau script de test** :
-   - `test-comfyui-git-setup.sh` pour valider la procédure
-   - Test en environnement isolé
+## 🧪 **Tests effectués :**
+- ✅ Test de l'approche `git fetch origin + git fetch origin master:master` 
+- ✅ Validation du script fix-comfyui-git.sh
+- ✅ Test du pre_start.sh avec nouvelle logique
+- ✅ Vérification de la robustesse avec différents scénarios
 
 ## 🧪 **Test de validation (local uniquement)**
 ```bash

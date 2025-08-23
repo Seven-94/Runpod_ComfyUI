@@ -21,6 +21,8 @@ config/.github/copilot.instructions.md
 test-version-check.sh
 test-packages.sh
 test-comfyui-git-setup.sh
+test-prestart-approach.sh
+test-fix-script.sh
 check-*.py
 debug-*
 

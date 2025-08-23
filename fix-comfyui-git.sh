@@ -45,42 +45,35 @@ git init
 echo "Configuration du remote origin..."
 git remote add origin https://github.com/comfyanonymous/ComfyUI.git
 
-# Fetch toutes les branches et tags
-echo "Récupération des branches distantes..."
-if git fetch --all --tags; then
-    echo "✅ Fetch réussi"
-    echo "Branches distantes disponibles:"
-    git branch -r
+# Fetch initial
+echo "Récupération initiale des branches distantes..."
+if git fetch origin; then
+    echo "✅ Fetch initial réussi"
 else
-    echo "❌ Échec du fetch"
+    echo "❌ Échec du fetch initial"
     exit 1
 fi
 
-# Vérifier que origin/master existe
-echo "Vérification de l'existence d'origin/master..."
-if git show-ref --verify --quiet refs/remotes/origin/master; then
-    echo "✅ origin/master trouvé"
-else
-    echo "❌ origin/master non trouvé"
+# Récupérer spécifiquement la branche master
+echo "Récupération de la branche master..."
+if git fetch origin master:master; then
+    echo "✅ Branche master récupérée"
     echo "Branches distantes disponibles:"
-    git branch -r
+    git branch -r | head -5
+    echo "..."
+else
+    echo "❌ Échec de la récupération de master"
     exit 1
 fi
 
-# Checkout de la branche master
+# Basculement sur master
 echo "Configuration de la branche master..."
-if git show-ref --verify --quiet refs/heads/master; then
-    echo "Branche master locale existe déjà"
-    git checkout master
-    echo "✅ Basculé sur la branche master existante"
+# Forcer le checkout en écrasant les fichiers locaux si nécessaire
+if git checkout -f master; then
+    echo "✅ Basculé sur la branche master"
 else
-    echo "Création de la branche master..."
-    if git checkout -b master origin/master; then
-        echo "✅ Branche master créée et configurée"
-    else
-        echo "❌ Échec de la création de la branche master"
-        exit 1
-    fi
+    echo "❌ Échec du basculement sur master"
+    exit 1
 fi
 
 # S'assurer que la branche master suit origin/master
