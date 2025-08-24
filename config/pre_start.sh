@@ -6,10 +6,10 @@ echo "Initialisation de ComfyUI pour RunPod..."
 # Étape 1: S'assurer que le dossier de base existe
 mkdir -p /workspace/ComfyUI
 
-# Étape 2: Vérifier si ComfyUI est déjà installé sur le volume
+# Étape 2: Installer ou mettre à jour ComfyUI
 if [ ! -f "/workspace/ComfyUI/main.py" ]; then
-    echo "Installation de ComfyUI v0.3.51 dans le volume network..."
-    # Copier les fichiers depuis la version préinstallée dans l'image
+    echo "Installation initiale de ComfyUI depuis l'image Docker..."
+    # Copier depuis l'image Docker
     if ! cp -r /opt/ComfyUI/* /workspace/ComfyUI/ 2>/dev/null; then
         echo "ERREUR: Impossible de copier les fichiers ComfyUI"
         exit 1
@@ -17,10 +17,29 @@ if [ ! -f "/workspace/ComfyUI/main.py" ]; then
     if ! cp -r /opt/ComfyUI/.* /workspace/ComfyUI/ 2>/dev/null; then
         echo "AVERTISSEMENT: Impossible de copier tous les fichiers cachés (normal)"
     fi
-    
-    echo "ComfyUI v0.3.51 installé avec succès"
+    echo "ComfyUI installé avec succès"
+fi
+
+# Étape 2.1: Mise à jour automatique vers le dernier tag
+echo "Mise à jour du code ComfyUI vers la dernière version..."
+cd /workspace/ComfyUI
+if [ -d ".git" ]; then
+    git fetch origin
+    git fetch --tags
+    latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+    git checkout $latest_tag
+    git reset --hard $latest_tag
+    echo "ComfyUI mis à jour sur le tag : $latest_tag"
+    if [ -f "comfyui_version.py" ]; then
+        echo "Version ComfyUI utilisée :"
+        grep __version__ comfyui_version.py
+    fi
 else
-    echo "ComfyUI déjà présent dans le volume network"
+    echo "Avertissement : /workspace/ComfyUI n'est pas un dépôt git, mise à jour impossible."
+    if [ -f "comfyui_version.py" ]; then
+        echo "Version ComfyUI actuelle :"
+        grep __version__ comfyui_version.py
+    fi
 fi
 
 # Étape 3: Création des répertoires pour les modèles s'ils n'existent pas
