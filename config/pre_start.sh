@@ -42,6 +42,11 @@ else
     fi
 fi
 
+# Étape 2.2: Installation de HuggingFace Hub pour le téléchargement de modèles
+echo "Installation/mise à jour de HuggingFace Hub..."
+pip install huggingface_hub[hf_transfer] --quiet
+echo "✅ HuggingFace Hub installé avec support de téléchargement rapide"
+
 # Étape 3: Création des répertoires pour les modèles s'ils n'existent pas
 mkdir -p /workspace/ComfyUI/models/{checkpoints,clip,clip_vision,controlnet,diffusers,embeddings,loras,upscale_models,vae,unet,text_encoders,diffusion_models,style_models}
 mkdir -p /workspace/ComfyUI/input
