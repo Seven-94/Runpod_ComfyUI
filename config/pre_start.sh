@@ -3,6 +3,25 @@ set -e
 
 echo "Initialisation de ComfyUI pour RunPod..."
 
+# Vérification de compatibilité CUDA/Driver
+echo "Vérification de la compatibilité des drivers NVIDIA..."
+if ! nvidia-smi &>/dev/null; then
+    echo "❌ ERREUR: nvidia-smi non accessible"
+    exit 1
+fi
+
+# Vérifier la version du driver NVIDIA
+DRIVER_VERSION=$(nvidia-smi --query-gpu=driver_version --format=csv,noheader,nounits | head -1)
+echo "Driver NVIDIA détecté: $DRIVER_VERSION"
+
+# Les drivers 545+ supportent CUDA 12.9
+DRIVER_MAJOR=$(echo $DRIVER_VERSION | cut -d. -f1)
+if [ "$DRIVER_MAJOR" -lt 545 ]; then
+    echo "⚠️  AVERTISSEMENT: Driver NVIDIA $DRIVER_VERSION détecté"
+    echo "   Ce serveur pourrait ne pas supporter CUDA 12.9 optimalement"
+    echo "   Si vous rencontrez des erreurs, redémarrez le pod pour obtenir un serveur avec drivers plus récents"
+fi
+
 # Étape 1: S'assurer que le dossier de base existe
 mkdir -p /workspace/ComfyUI
 
@@ -21,26 +40,26 @@ if [ ! -f "/workspace/ComfyUI/main.py" ]; then
 fi
 
 # Étape 2.1: Mise à jour automatique vers le dernier tag
-echo "Mise à jour du code ComfyUI vers la dernière version..."
-cd /workspace/ComfyUI
-if [ -d ".git" ]; then
-    git fetch origin
-    git fetch --tags
-    latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
-    git checkout $latest_tag
-    git reset --hard $latest_tag
-    echo "ComfyUI mis à jour sur le tag : $latest_tag"
-    if [ -f "comfyui_version.py" ]; then
-        echo "Version ComfyUI utilisée :"
-        grep __version__ comfyui_version.py
-    fi
-else
-    echo "Avertissement : /workspace/ComfyUI n'est pas un dépôt git, mise à jour impossible."
-    if [ -f "comfyui_version.py" ]; then
-        echo "Version ComfyUI actuelle :"
-        grep __version__ comfyui_version.py
-    fi
-fi
+# echo "Mise à jour du code ComfyUI vers la dernière version..."
+# cd /workspace/ComfyUI
+# if [ -d ".git" ]; then
+#     git fetch origin
+#     git fetch --tags
+#     latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+#     git checkout $latest_tag
+#     git reset --hard $latest_tag
+#     echo "ComfyUI mis à jour sur le tag : $latest_tag"
+#     if [ -f "comfyui_version.py" ]; then
+#         echo "Version ComfyUI utilisée :"
+#         grep __version__ comfyui_version.py
+#     fi
+# else
+#     echo "Avertissement : /workspace/ComfyUI n'est pas un dépôt git, mise à jour impossible."
+#     if [ -f "comfyui_version.py" ]; then
+#         echo "Version ComfyUI actuelle :"
+#         grep __version__ comfyui_version.py
+#     fi
+# fi
 
 # Étape 2.2: Installation de HuggingFace Hub pour le téléchargement de modèles
 echo "Installation/mise à jour de HuggingFace Hub..."
