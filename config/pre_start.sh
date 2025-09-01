@@ -39,27 +39,27 @@ if [ ! -f "/workspace/ComfyUI/main.py" ]; then
     echo "ComfyUI installé avec succès"
 fi
 
-# Étape 2.1: Mise à jour automatique vers le dernier tag
-# echo "Mise à jour du code ComfyUI vers la dernière version..."
-# cd /workspace/ComfyUI
-# if [ -d ".git" ]; then
-#     git fetch origin
-#     git fetch --tags
-#     latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
-#     git checkout $latest_tag
-#     git reset --hard $latest_tag
-#     echo "ComfyUI mis à jour sur le tag : $latest_tag"
-#     if [ -f "comfyui_version.py" ]; then
-#         echo "Version ComfyUI utilisée :"
-#         grep __version__ comfyui_version.py
-#     fi
-# else
-#     echo "Avertissement : /workspace/ComfyUI n'est pas un dépôt git, mise à jour impossible."
-#     if [ -f "comfyui_version.py" ]; then
-#         echo "Version ComfyUI actuelle :"
-#         grep __version__ comfyui_version.py
-#     fi
-# fi
+Étape 2.1: Mise à jour automatique vers le dernier tag
+echo "Mise à jour du code ComfyUI vers la dernière version..."
+cd /workspace/ComfyUI
+if [ -d ".git" ]; then
+    git fetch origin
+    git fetch --tags
+    latest_tag=$(git describe --tags $(git rev-list --tags --max-count=1))
+    git checkout $latest_tag
+    git reset --hard $latest_tag
+    echo "ComfyUI mis à jour sur le tag : $latest_tag"
+    if [ -f "comfyui_version.py" ]; then
+        echo "Version ComfyUI utilisée :"
+        grep __version__ comfyui_version.py
+    fi
+else
+    echo "Avertissement : /workspace/ComfyUI n'est pas un dépôt git, mise à jour impossible."
+    if [ -f "comfyui_version.py" ]; then
+        echo "Version ComfyUI actuelle :"
+        grep __version__ comfyui_version.py
+    fi
+fi
 
 # Étape 2.2: Installation de HuggingFace Hub pour le téléchargement de modèles
 echo "Installation/mise à jour de HuggingFace Hub..."
