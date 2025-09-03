@@ -39,7 +39,7 @@ if [ ! -f "/workspace/ComfyUI/main.py" ]; then
     echo "ComfyUI installé avec succès"
 fi
 
-Étape 2.1: Mise à jour automatique vers le dernier tag
+# Étape 2.1: Mise à jour automatique vers le dernier tag
 echo "Mise à jour du code ComfyUI vers la dernière version..."
 cd /workspace/ComfyUI
 if [ -d ".git" ]; then
